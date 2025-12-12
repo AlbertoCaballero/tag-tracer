@@ -25,35 +25,44 @@ TagTracer is an automated tag validation tool designed to run a headless browser
 ```
 tag-tracer/
 │
-├── OUTLINE.md                # Project outline (this file)
-├── README.md                 # Documentation
-├── requirements.txt          # Python dependencies
+├── OUTLINE.md                  # Project outline (this file)
+├── README.md                   # Documentation
+├── requirements.txt            # Python dependencies
+├── pyproject.toml              # Python project file
 │
 ├── config/
-│   └── sample_config.xlsx    # Example Excel config
+│   └── sample_config.xlsx      # Example Excel config
 │
 ├── src/
-│   ├── tag_tracer_cli.py     # CLI entry point
+│   ├── tag_tracer
+│   │   ├── __init__.py
+│   │   └── cli.py              # CLI entry point
 │   │
 │   ├── browser/
-│   │   ├── launcher.py
-│   │   └── network_capture.py
+│   │   └── browser.py          # Browser session initialicer
 │   │
 │   ├── config_loader/
-│   │   └── excel_parser.py
+│   │   └── config_loader.py    # Configuration loader from YAML
 │   │
-│   ├── validation/
-│   │   ├── rules.py
-│   │   ├── matcher.py
-│   │   └── validator.py
+│   ├── excel_loader/
+│   │   └── excel_loader.py     # Excel to YAML parser
+│   │
+│   ├── network_capture/
+│   │   └── network_capture.py  # Network capture engine
 │   │
 │   ├── reporting/
+│   │   ├── reporting.py        # Reporting, agregation and format engine
 │   │   ├── html_report.py
 │   │   ├── json_report.py
 │   │   └── excel_report.py
 │   │
+│   ├── validation/
+│   │   ├── validation.py       # Validation engine
+│   │   ├── rules.py
+│   │   └── matcher.py
+│   │
 │   └── utils/
-│       └── helpers.py
+│       └── utils.py
 │
 └── tests/
     ├── test_config_loader.py
@@ -70,6 +79,7 @@ tag-tracer/
 * Reads Excel file input.
 * Converts rows into structured config objects.
 * Validates configuration integrity.
+* Generates YAML based configuration.
 
 ### **4.2 browser**
 
@@ -130,8 +140,10 @@ tag-tracer/
 
 ### **Phase 1 — Setup**
 
-* [ ] Initialize repository and project structure
-* [ ] Add requirements.txt
+* [✅] Initialize repository and project structure
+* [✅] Add requirements.txt
+* [✅] Add pyproject.txt
+* [✅] Project scaffolding
 * [ ] Create sample Excel config structure
 
 ### **Phase 2 — Configuration Parsing**
