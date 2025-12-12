@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tag-tracer"
+version = "0.1.0"
+description = "Automated marketing and analytics tag tracing tool using headless browsing and rule-based validation."
+authors = [
+    { name = "Your Name", email = "you@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "playwright>=1.45.0",
+    "pandas>=2.2.2",
+    "openpyxl>=3.1.2",
+    "pyyaml>=6.0.1",
+    "rich>=13.7.1",
+    "pydantic>=2.8.2"
+]
+
+[project.scripts]
+tagtracer = "tag_tracer.cli:main"
+
+[tool.setuptools]
+packages = ["tag_tracer"]
+
