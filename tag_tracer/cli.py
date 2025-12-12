@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-TagTracer CLI
---------------
-Entry point for TagTracer command line usage. Provides the core command
-router and high-level description of the tool.
+TagTracer CLI Module
+---------------------
 
-TagTracer is a Python-based automated tag validation framework that uses
-headless browsing to detect, capture, and validate marketing and analytics
-network calls based on configurable rules defined in external files
-(e.g., Excel or YAML).
+This module serves as the primary entry point for the TagTracer command-line
+interface. It provides the command router, high-level descriptions, and the
+initial scaffolding for future functional components such as scanning,
+validation, configuration loading, and reporting.
 
-This file only contains the initial CLI scaffolding. Functional
-implementations will be added incrementally.
+All operational logic will be implemented in the appropriate modules within
+the tag_tracer package. This file should remain focused solely on CLI
+parsing, dispatching, and presentation.
 """
 
 import argparse
@@ -42,7 +41,7 @@ def main():
         help="Optional path to a configuration file (Excel/YAML).",
     )
 
-    # TODO: Implement scan execution logic here
+    # TODO: Implement scan execution handler
 
     # ---------------------------------------------------------
     # validate command
@@ -55,7 +54,7 @@ def main():
         help="Path to a previously captured network log file.",
     )
 
-    # TODO: Implement validation logic here
+    # TODO: Implement validation handler
 
     # ---------------------------------------------------------
     # version command
