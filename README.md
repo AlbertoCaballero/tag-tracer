@@ -4,7 +4,7 @@
 
 <!-- Simple modern SVG logo -->
 
-<img src="assets/tagtracer_logo.png" alt="TagTracer Logo" width="240" />
+<img src="assets/tagtracer_logo.png" alt="TagTracer Logo" width="100%" />
 
 </div>
 
