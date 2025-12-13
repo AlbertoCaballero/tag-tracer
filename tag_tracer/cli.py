@@ -19,7 +19,7 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="tagtracer",
+        prog="tag-tracer",
         description=(
             "TagTracer – Automated marketing and analytics tag tracing tool. "
             "Captures network calls from a headless browser and validates them "

@@ -7,7 +7,7 @@ name = "tag-tracer"
 version = "0.1.0"
 description = "Automated marketing and analytics tag tracing tool using headless browsing and rule-based validation."
 authors = [
-    { name = "Your Name", email = "you@example.com" }
+    { name = "Alberto Caballero", email = "albertoCaballero80@outlook.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.9"
@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tagtracer = "tag_tracer.cli:main"
+tag-tracer = "tag_tracer.cli:main"
 
 [tool.setuptools]
 packages = ["tag_tracer"]
