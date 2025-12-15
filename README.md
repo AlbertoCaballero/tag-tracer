@@ -74,6 +74,8 @@ Or local development:
 git clone https://github.com/your-repo/tag-tracer
 cd tag-tracer
 pip install -r requirements.txt
+pip install -e .
+tag-tracer
 ```
 
 ---
