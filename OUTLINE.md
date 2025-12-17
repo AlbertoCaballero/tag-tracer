@@ -148,9 +148,9 @@ tag-tracer/
 
 ### **Phase 2 — Configuration Parsing**
 
-* [ ] Implement Excel parsing module
-* [ ] Validate configuration format
-* [ ] Build config object models
+* [🛠️] Implement Excel parsing module
+* [🛠️] Validate configuration format
+* [🛠️] Build config object models
 
 ### **Phase 3 — Browser Automation**
 

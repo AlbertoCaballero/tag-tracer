@@ -1,6 +1,9 @@
+import ast
 import pandas as pd
 from pydantic import BaseModel
 from typing import List, Dict, Any
+
+from tag_tracer.utils.utils import string_to_list
 
 def _parse_string_list(value: str) -> List[str]:
     """
@@ -22,6 +25,7 @@ class VendorConfig(BaseModel):
 class PageConfig(BaseModel):
     id: str
     target_url: str
+    page_vendors: List[str] = []
     expected_tags: Dict[str, Any] = {}
 
 class ExcelConfig(BaseModel):
@@ -40,29 +44,27 @@ class ExcelLoader:
         config = ExcelConfig()
 
         for sheet_name in self.workbook.sheet_names:
-            df = self.workbook.parse(sheet_name).dropna(how='all')
+            data_frame = self.workbook.parse(sheet_name).dropna(how='all')
             if sheet_name == 'pages':
-                                for _, row in df.iterrows():
-                                    page = PageConfig(id=row['id'], target_url=row['target-url'])
-                                    for col in df.columns:
-                                        if col not in ['id', 'target-url']:
-                                            if pd.notna(row[col]):
-                                                if col == 'vendors':
-                                                    page.expected_tags[col] = _parse_string_list(row[col])
-                                                else:
-                                                    page.expected_tags[col] = row[col]
-                                    config.pages.append(page)
-            else: # Vendor sheet
+                for _, row in data_frame.iterrows():
+                    page = PageConfig(id=row['id'], target_url=row['target-url'], page_vendors=string_to_list(row['vendors']))
+                    for col in data_frame.columns:
+                        # what is this for?
+                        if col not in ['id', 'target-url', 'vendors']:
+                            if pd.notna(row[col]):
+                                page.expected_tags[col] = row[col]
+                    config.pages.append(page)
+            else: # Vendor sheets
                 vendor_name = sheet_name
                 vendor_config = VendorConfig()
 
-                if len(df.columns) < 2:
+                if len(data_frame.columns) < 2:
                     continue
                 
-                key_col = df.columns[0]
-                val_col = df.columns[1]
+                key_col = data_frame.columns[0]
+                val_col = data_frame.columns[1]
 
-                for _, row in df.iterrows():
+                for _, row in data_frame.iterrows():
                     key = row[key_col]
                     value = row[val_col]
 

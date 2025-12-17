@@ -16,6 +16,8 @@ parsing, dispatching, and presentation.
 import argparse
 import sys
 
+from tag_tracer.excel_loader.excel_loader import ExcelLoader
+from tag_tracer.utils.utils import format_expected_tags
 
 def main():
     parser = argparse.ArgumentParser(
@@ -76,7 +78,6 @@ def main():
             if args.config:
                 try:
                     print(f"[TagTracer] Loading configuration from: {args.config}")
-                    from tag_tracer.excel_loader.excel_loader import ExcelLoader
                     loader = ExcelLoader(args.config)
                     config_data = loader.load()
                     print("[TagTracer] Configuration loaded successfully.")
@@ -96,7 +97,8 @@ def main():
                     for page in config_data.pages:
                         print(f"  - Page ID: {page.id}")
                         print(f"    URL: {page.target_url}")
-                        print(f"    Expected Tags: {page.expected_tags}")
+                        print(f"    Expected Tags: ")
+                        format_expected_tags(page.expected_tags)
                 except Exception as e:
                     print(f"[TagTracer] Error loading configuration: {e}", file=sys.stderr)
                     sys.exit(1)
