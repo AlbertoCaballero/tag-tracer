@@ -21,8 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tag-tracer = "tag_tracer.cli:main"
+tag-tracer = "src.cli:main"
 
 [tool.setuptools]
-packages = ["tag_tracer"]
-
+packages = ["src"]
