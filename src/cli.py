@@ -16,8 +16,9 @@ parsing, dispatching, and presentation.
 import argparse
 import sys
 
-from tag_tracer.excel_loader.excel_loader import ExcelLoader
-from tag_tracer.utils.utils import format_expected_tags
+from src.excel_loader.excel_loader import ExcelLoader
+from src.utils.utils import format_expected_tags
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -71,7 +72,8 @@ def main():
 
     if args.command == "scan":
         import asyncio
-        from tag_tracer.browser.browser import BrowserManager
+
+        from src.browser.browser import BrowserManager
 
         async def run_scan():
             print(f"[TagTracer] Scan requested for URL: {args.url}")
@@ -100,21 +102,24 @@ def main():
                         print(f"    Expected Tags: ")
                         format_expected_tags(page.expected_tags)
                 except Exception as e:
-                    print(f"[TagTracer] Error loading configuration: {e}", file=sys.stderr)
+                    print(
+                        f"[TagTracer] Error loading configuration: {e}", file=sys.stderr
+                    )
                     sys.exit(1)
 
             browser_manager = BrowserManager(headless=True)
             try:
                 await browser_manager.launch()
                 await browser_manager.navigate(args.url)
-                
+
                 requests = browser_manager.get_captured_requests()
                 print(f"\n[TagTracer] Captured {len(requests)} network requests.")
                 for i, req in enumerate(requests[:5]):
-                    print(f"  - Req {i+1}: {req.method} {req.url}")
+                    print(f"  - Req {i + 1}: {req.method} {req.url}")
 
                 if args.config:
-                    from tag_tracer.validation.validation import Validator
+                    from src.validation.validation import Validator
+
                     validator = Validator(config_data)
                     validator.validate(requests)
             finally:
@@ -139,4 +144,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

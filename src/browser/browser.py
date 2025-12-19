@@ -7,9 +7,13 @@ TODO:
 - Add support for headful mode
 - Add logging and debugging hooks
 """
-from playwright.async_api import async_playwright, Browser, Page, Request
+
 from typing import List
-from tag_tracer.models import NetworkRequest
+
+from playwright.async_api import Browser, Page, Request, async_playwright
+
+from src.models import NetworkRequest
+
 
 class BrowserManager:
     def __init__(self, headless: bool = True):
@@ -25,7 +29,7 @@ class BrowserManager:
                 url=request.url,
                 method=request.method,
                 headers=request.headers,
-                post_data=request.post_data
+                post_data=request.post_data,
             )
         )
 
@@ -35,8 +39,7 @@ class BrowserManager:
         """
         self.p = await async_playwright().start()
         self.browser = await self.p.chromium.launch(
-            headless=self.headless,
-            args=["--disable-http2"]
+            headless=self.headless, args=["--disable-http2"]
         )
         self.page = await self.browser.new_page()
         self.page.on("request", self._handle_request)
