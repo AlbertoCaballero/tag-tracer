@@ -17,7 +17,8 @@ import argparse
 import sys
 
 from src.excel_loader.excel_loader import ExcelLoader
-from src.utils.utils import format_expected_tags
+from src.utils.utils import print_expected_tags
+from src.validation.validation import Validator
 
 
 def main():
@@ -76,14 +77,14 @@ def main():
         from src.browser.browser import BrowserManager
 
         async def run_scan():
-            print(f"[TagTracer] Scan requested for URL: {args.url}")
+            print(f"\n[TagTracer] Scan requested for URL: {args.url}")
             if args.config:
                 try:
                     print(f"[TagTracer] Loading configuration from: {args.config}")
                     loader = ExcelLoader(args.config)
                     config_data = loader.load()
                     print("[TagTracer] Configuration loaded successfully.")
-                    print("\n--- Vendors ---")
+                    print("\n[Vendors]")
                     for vendor_name, vendor_config in config_data.vendors.items():
                         print(f"  - {vendor_name}:")
                         if vendor_config.domains:
@@ -95,12 +96,12 @@ def main():
                         if vendor_config.header_fields:
                             print(f"    Header Fields: {vendor_config.header_fields}")
 
-                    print("\n--- Pages ---")
+                    print("\n[Pages]")
                     for page in config_data.pages:
                         print(f"  - Page ID: {page.id}")
                         print(f"    URL: {page.target_url}")
-                        print(f"    Expected Tags: ")
-                        format_expected_tags(page.expected_tags)
+                        print("    Expected Tags:")
+                        print_expected_tags(page.expected_tags)
                 except Exception as e:
                     print(
                         f"[TagTracer] Error loading configuration: {e}", file=sys.stderr
@@ -118,8 +119,6 @@ def main():
                     print(f"  - Req {i + 1}: {req.method} {req.url}")
 
                 if args.config:
-                    from src.validation.validation import Validator
-
                     validator = Validator(config_data)
                     validator.validate(requests)
             finally:

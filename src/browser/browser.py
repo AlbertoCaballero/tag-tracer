@@ -10,7 +10,7 @@ TODO:
 
 from typing import List
 
-from playwright.async_api import Browser, Page, Request, async_playwright
+from playwright.async_api import Page, Request, async_playwright
 
 from src.models import NetworkRequest
 
@@ -53,7 +53,7 @@ class BrowserManager:
             raise ConnectionError("Browser not launched. Call launch() first.")
         print(f"[Browser] Navigating to: {url}")
         await self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        print(f"[Browser] Navigation complete.")
+        print("\n[Browser] Navigation complete.")
 
     def get_captured_requests(self) -> List[NetworkRequest]:
         return self.captured_requests
