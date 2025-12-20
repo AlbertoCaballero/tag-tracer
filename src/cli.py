@@ -14,8 +14,10 @@ parsing, dispatching, and presentation.
 """
 
 import argparse
+import asyncio
 import sys
 
+from src.browser.browser import BrowserManager
 from src.excel_loader.excel_loader import ExcelLoader
 from src.utils.utils import print_expected_tags
 from src.validation.validation import Validator
@@ -72,9 +74,6 @@ def main():
     args = parser.parse_args()
 
     if args.command == "scan":
-        import asyncio
-
-        from src.browser.browser import BrowserManager
 
         async def run_scan():
             print(f"\n[TagTracer] Scan requested for URL: {args.url}")
