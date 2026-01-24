@@ -97,7 +97,7 @@ def main():
 
                     print("\n[Pages]")
                     for page in config_data.pages:
-                        print(f"  - Page ID: {page.id}")
+                        print(f"    ID: {page.id}")
                         print(f"    URL: {page.target_url}")
                         print("    Expected Tags:")
                         print_expected_tags(page.expected_tags)

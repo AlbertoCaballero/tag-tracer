@@ -51,7 +51,7 @@ class BrowserManager:
         """
         if not self.page:
             raise ConnectionError("Browser not launched. Call launch() first.")
-        print(f"[Browser] Navigating to: {url}")
+        print(f"\n[Browser] Navigating to: {url}")
         await self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
         print("\n[Browser] Navigation complete.")
 
