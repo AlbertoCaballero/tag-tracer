@@ -71,7 +71,7 @@ pip install tag-tracer
 Or local development:
 
 ```
-git clone https://github.com/your-repo/tag-tracer
+git clone https://github.com/AlbertoCaballero/tag-tracer
 cd tag-tracer
 source .venv/bin/activate
 pip install -r requirements.txt
