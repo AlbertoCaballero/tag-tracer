@@ -1,0 +1,31 @@
+{
+    "total_pages_scanned": 3,
+    "pages_passed": 3,
+    "pages_failed": 0,
+    "page_results": [
+        {
+            "page_id": "auto",
+            "page_url": "https://www.usaa.com/inet/wc/auto-insurance?vurl=VURL_auto",
+            "expected_tags_count": 5,
+            "matched_requests_count": 0,
+            "request_results": [],
+            "overall_status": "passed"
+        },
+        {
+            "page_id": "auto1",
+            "page_url": "https://www.usaa.com/inet/wc/auto-insurance?vurl=VURL_auto",
+            "expected_tags_count": 5,
+            "matched_requests_count": 0,
+            "request_results": [],
+            "overall_status": "passed"
+        },
+        {
+            "page_id": "auto2",
+            "page_url": "https://www.usaa.com/inet/wc/auto-insurance?vurl=VURL_auto",
+            "expected_tags_count": 5,
+            "matched_requests_count": 0,
+            "request_results": [],
+            "overall_status": "passed"
+        }
+    ]
+}

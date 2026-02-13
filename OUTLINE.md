@@ -41,11 +41,8 @@ tag-tracer/
 │   ├── browser/
 │   │   └── browser.py          # Browser session initialicer
 │   │
-│   ├── config_loader/
-│   │   └── config_loader.py    # Configuration loader from YAML
-│   │
-│   ├── excel_loader/
-│   │   └── excel_loader.py     # Excel to YAML parser
+│   ├── config/
+│   │   └── loader.py           # Configuration loader from Excel to Pydantic models
 │   │
 │   ├── network_capture/
 │   │   └── network_capture.py  # Network capture engine
@@ -74,12 +71,11 @@ tag-tracer/
 
 ## 4. Module Descriptions
 
-### **4.1 config_loader**
+### **4.1 config**
 
 * Reads Excel file input.
-* Converts rows into structured config objects.
+* Converts rows into structured Pydantic config objects.
 * Validates configuration integrity.
-* Generates YAML based configuration.
 
 ### **4.2 browser**
 

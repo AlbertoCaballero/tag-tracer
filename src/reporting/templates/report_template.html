@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TagTracer Validation Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h1, h2, h3 { color: #0056b3; }
+        .summary { background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .summary p { margin: 5px 0; }
+        .page-result, .request-result, .tag-result { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; padding: 10px; }
+        .page-result.passed { border-left: 5px solid #28a745; }
+        .page-result.failed { border-left: 5px solid #dc3545; }
+        .request-result.passed { border-left: 3px solid #28a745; }
+        .request-result.failed { border-left: 3px solid #dc3545; }
+        .tag-result.passed { color: #28a745; }
+        .tag-result.failed { color: #dc3545; }
+        .status-badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 0.8em; font-weight: bold; margin-left: 10px; }
+        .status-badge.passed { background-color: #28a745; color: #fff; }
+        .status-badge.failed { background-color: #dc3545; color: #fff; }
+        pre { background-color: #eee; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TagTracer Validation Report</h1>
+        <p>Generated on: {{ timestamp }}</p>
+
+        <div class="summary">
+            <h2>Overall Summary</h2>
+            <p><strong>Total Pages Scanned:</strong> {{ summary.total_pages_scanned }}</p>
+            <p><strong>Pages Passed:</strong> {{ summary.pages_passed }}</p>
+            <p><strong>Pages Failed:</strong> {{ summary.pages_failed }}</p>
+        </div>
+
+        {% for page in summary.page_results %}
+            <div class="page-result {{ page.overall_status }}">
+                <h3>Page: {{ page.page_id }} <span class="status-badge {{ page.overall_status }}">{{ page.overall_status|upper }}</span></h3>
+                <p><strong>URL:</strong> <a href="{{ page.page_url }}" target="_blank">{{ page.page_url }}</a></p>
+                <p>Expected Tags: {{ page.expected_tags_count }} | Matched Requests: {{ page.matched_requests_count }}</p>
+
+                {% for request in page.request_results %}
+                    <div class="request-result {{ request.overall_status }}">
+                        <h4>Request: {{ request.request_url }} <span class="status-badge {{ request.overall_status }}">{{ request.overall_status|upper }}</span></h4>
+                        <p><strong>Vendor:</strong> {{ request.vendor_name }}</p>
+                        <p><strong>Matched Domains:</strong> {{ request.matched_domains|join(", ") }}</p>
+                        <h5>Tag Validations:</h5>
+                        <ul>
+                            {% for tag in request.tags_validated %}
+                                <li class="tag-result {{ tag.status }}">
+                                    <strong>{{ tag.key }}:</strong> Expected <code>{{ tag.expected_value }}</code>, Actual <code>{{ tag.actual_value }}</code> (Rule: {{ tag.rule_type }})
+                                    <span class="status-badge {{ tag.status }}">{{ tag.status|upper }}</span> - {{ tag.message }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

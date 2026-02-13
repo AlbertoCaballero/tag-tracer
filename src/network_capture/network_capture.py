@@ -1,24 +1,38 @@
 """Network capture utilities for TagTracer.
-Handles interception of network requests during page navigation.
-Filters captured data by domain rules supplied by the configuration layer.
+Handles filtering and persistence of network requests.
 
-TODO:
-- Capture all requests and store metadata
-- Add filtering by domain
-- Persist network logs (JSON)
 """
 
+import json
+from typing import List
+
+from src.models import NetworkRequest
+
+
 class NetworkCapture:
-    def __init__(self, domain_filters=None):
+    def __init__(self, domain_filters: List[str] = None, output_dir: str = None):
         self.domain_filters = domain_filters or []
-        self.captured = []
+        self.output_dir = output_dir
 
+    def filter_requests(self, requests: List[NetworkRequest]) -> List[NetworkRequest]:
+        if not self.domain_filters:
+            return requests
 
-async def attach_listeners(self, context):
-    # TODO: Bind network events to listener functions
-    pass
+        filtered = []
+        for request in requests:
+            if any(domain in request.url for domain in self.domain_filters):
+                filtered.append(request)
+        return filtered
 
+    def save_requests_to_json(self, requests: List[NetworkRequest], filename: str = "captured_requests.json"):
+        if not self.output_dir:
+            print("[NetworkCapture] Warning: output_dir not set, skipping JSON save.")
+            return
 
-def filter_results(self):
-    # TODO: Filter captured requests by domain patterns
-    pass
+        import os
+
+        os.makedirs(self.output_dir, exist_ok=True)
+        file_path = os.path.join(self.output_dir, filename)
+        with open(file_path, "w") as f:
+            json.dump([req.dict() for req in requests], f, indent=4)
+        print(f"[NetworkCapture] Saved {len(requests)} requests to {file_path}")
