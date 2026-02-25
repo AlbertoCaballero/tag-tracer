@@ -8,8 +8,6 @@ TODO:
 - Add logging and debugging hooks
 """
 
-from typing import List
-
 from playwright.async_api import Page, Request, async_playwright
 
 from src.models import NetworkRequest
@@ -21,7 +19,7 @@ class BrowserManager:
         self.p = None
         self.browser = None
         self.page = None
-        self.captured_requests: List[NetworkRequest] = []
+        self.captured_requests: list[NetworkRequest] = []
 
     async def _handle_request(self, request: Request):
         self.captured_requests.append(
@@ -55,7 +53,7 @@ class BrowserManager:
         await self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
         print("\n[Browser] Navigation complete.")
 
-    def get_captured_requests(self) -> List[NetworkRequest]:
+    def get_captured_requests(self) -> list[NetworkRequest]:
         return self.captured_requests
 
     async def close(self):

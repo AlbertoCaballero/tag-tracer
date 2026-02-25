@@ -77,11 +77,11 @@ def main():
 
         async def run_scan():
             print(f"\n[TagTracer] Scan requested for URL: {args.url}")
+            loader = ExcelLoader(args.config)
+            config_data = loader.load()
             if args.config:
                 try:
                     print(f"[TagTracer] Loading configuration from: {args.config}")
-                    loader = ExcelLoader(args.config)
-                    config_data = loader.load()
                     print("[TagTracer] Configuration loaded successfully.")
                     print("\n[Vendors]")
                     for vendor_name, vendor_config in config_data.vendors.items():
