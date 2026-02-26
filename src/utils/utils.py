@@ -21,3 +21,13 @@ def format_expected_tags(tags: Dict[str, Any] = {}) -> str:
             # Otherwise, just print the value directly
             formatted_lines.append(f"  - {tag_key}: {tag_value}")
     return "\n".join(formatted_lines)
+
+def print_expected_tags(tags: Dict[str, Any] = {}):
+    """
+    Takes the expected tags and forms a readable output
+    """
+    format = ""
+    for tag in tags:
+        print(f"{'\t' * 1}{tag}: {tags[tag]}")
+        format.join(f"\n{'\t' * 1}{tag}: {tags[tag]}")
+    return format

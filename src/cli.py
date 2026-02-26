@@ -24,7 +24,7 @@ from src.config.loader import ExcelLoader
 from src.models import NetworkRequest  # New import
 from src.network_capture.network_capture import NetworkCapture
 from src.reporting.reporting import Reporting
-from src.utils.utils import format_expected_tags  # Updated import
+from src.utils.utils import print_expected_tags  # Updated import
 from src.validation.matcher import Matcher
 from src.validation.validation import Validator
 
@@ -129,7 +129,7 @@ def main():
                         print(f"    ID: {page.id}")
                         print(f"    URL: {page.target_url}")
                         print("    Expected Tags:")
-                        print(format_expected_tags(page.expected_tags))  # Updated call
+                        print_expected_tags(page.expected_tags)
                 except Exception as e:
                     print(
                         f"[TagTracer] Error loading configuration: {e}", file=sys.stderr
