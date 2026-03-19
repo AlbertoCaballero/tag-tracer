@@ -18,6 +18,7 @@ class BrowserManager:
         self.headless = headless
         self.p = None
         self.browser = None
+        self.context = None
         self.page = None
         self.captured_requests: list[NetworkRequest] = []
 
@@ -36,9 +37,27 @@ class BrowserManager:
         Launches a headless browser instance and returns a new page object.
         """
         self.p = await async_playwright().start()
+
+        # Base configuration
+        # self.browser = await self.p.chromium.launch(
+        #     headless=self.headless, args=["--disable-http2"]
+        # )
+
+        # Stealth configuration
         self.browser = await self.p.chromium.launch(
-            headless=self.headless, args=["--disable-http2"]
+            headless=False,  # Try headed mode first
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+            ]
         )
+        self.context = await self.browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            viewport={"width": 1280, "height": 800},
+            locale="en-US",
+            timezone_id="America/New_York",
+        )
+        await self.context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         self.page = await self.browser.new_page()
         self.page.on("request", self._handle_request)
         return self.page
