@@ -143,7 +143,7 @@ def main():
 
                 requests = browser_manager.get_captured_requests()
                 print(f"\n[TagTracer] Captured {len(requests)} network requests.")
-                for i, req in enumerate(requests[:5]):
+                for i, req in enumerate(requests):
                     print(f"  - Req {i + 1}: {req.method} {req.url}")
 
                 if config_data:
