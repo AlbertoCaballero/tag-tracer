@@ -150,9 +150,9 @@ tag-tracer/
 
 ### **Phase 3 — Browser Automation**
 
-* [ ] Implement Playwright launcher
-* [ ] Implement network request capture
-* [ ] Normalize URLs, parameters, payload
+* [✅] Implement Playwright launcher
+* [✅] Implement network request capture
+* [✅] Normalize URLs, parameters, payload
 
 ### **Phase 4 — Tag Matching & Validation**
 
