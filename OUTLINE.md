@@ -136,23 +136,24 @@ tag-tracer/
 
 ### **Phase 1 — Setup**
 
-* [✅] Initialize repository and project structure
-* [✅] Add requirements.txt
-* [✅] Add pyproject.txt
-* [✅] Project scaffolding
-* [✅] Create sample Excel config structure
+* [x] Initialize repository and project structure
+* [x] Add requirements.txt
+* [x] Add pyproject.txt
+* [x] Project scaffolding
+* [x] Create sample Excel config structure
 
 ### **Phase 2 — Configuration Parsing**
 
-* [✅] Implement Excel parsing module
-* [✅] Validate configuration format
-* [✅] Build config object models
+* [x] Implement Excel parsing module
+* [x] Validate configuration format
+* [x] Build config object models
 
 ### **Phase 3 — Browser Automation**
 
-* [✅] Implement Playwright launcher
-* [✅] Implement network request capture
-* [✅] Normalize URLs, parameters, payload
+* [x] Implement Playwright launcher
+* [x] Implement network request capture
+* [x] Normalize URLs, parameters, payload
+* [ ] Store network calls in json report for reference (maybe)
 
 ### **Phase 4 — Tag Matching & Validation**
 
