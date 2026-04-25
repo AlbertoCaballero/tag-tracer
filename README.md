@@ -84,9 +84,10 @@ tag-tracer
 ## Quick Start
 
 ```
-tag-tracer scan "https://example.com" \
-           --config config/tag-tracer-config.xlsx \
-           --output reports/
+tag-tracer scan \
+--url "https://example.com" \
+--config config/tag-tracer-config.xlsx \
+--output reports
 ```
 
 ---
