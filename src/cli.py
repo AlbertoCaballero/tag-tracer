@@ -15,21 +15,10 @@ parsing, dispatching, and presentation.
 
 import argparse
 import asyncio
-import json
-import sys
-from typing import List
 
-from src.browser.browser import BrowserManager
 from src.commands.scan import scan
 from src.commands.validate import validate
 from src.commands.version import version
-from src.config.loader import ExcelLoader
-from src.models import NetworkRequest
-from src.network_capture.network_capture import NetworkCapture
-from src.reporting.reporting import Reporting
-from src.utils.utils import print_expected_tags
-from src.validation.matcher import Matcher
-from src.validation.validation import Validator
 
 
 def main():
