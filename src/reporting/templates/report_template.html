@@ -44,6 +44,10 @@
         .page-tags th, .page-tags td { border: 1px solid #ddd; padding: 4px 8px; text-align: left; }
         .page-tags th { background-color: #e9ecef; }
         .location { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.8em; background-color: #d1e7ff; color: #084298; font-family: monospace; }
+        .collapsible-header { cursor: pointer; user-select: none; }
+        .collapsible-header .toggle { font-size: 0.85em; color: #0056b3; }
+        .collapsible-content { display: block; }
+        .collapsible-content.closed { display: none; }
 
         .hidden { display: none !important; }
         .empty-state { color: #666; font-style: italic; padding: 20px; text-align: center; }
@@ -112,21 +116,29 @@
                         </tbody>
                     </table>
 
-                    <h4>Found Tags</h4>
-                    <table>
-                        <thead>
-                            <tr><th>Param</th><th>Value</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for key, value in page.found_tags.items() %}
-                                <tr><td class="param-key">{{ key }}</td><td class="param-value">{{ value }}</td></tr>
-                            {% else %}
-                                <tr><td colspan="2">No tags found.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <h4 class="collapsible-header" onclick="toggleSection(this)">
+                        <span class="toggle">&#9654;</span> Found Tags ({{ page.found_tags|length }})
+                    </h4>
+                    <div class="collapsible-content closed">
+                        <table>
+                            <thead>
+                                <tr><th>Param</th><th>Value</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for key, value in page.found_tags.items() %}
+                                    <tr><td class="param-key">{{ key }}</td><td class="param-value">{{ value }}</td></tr>
+                                {% else %}
+                                    <tr><td colspan="2">No tags found.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
+                <h4 class="collapsible-header" onclick="toggleSection(this)">
+                    <span class="toggle">&#9654;</span> Requests ({{ page.request_results|length }})
+                </h4>
+                <div class="collapsible-content closed">
                 {% for request in page.request_results %}
                     <div class="request-result {{ request.overall_status }}"
                          data-status="{{ request.overall_status }}"
@@ -198,6 +210,7 @@
                         </div>
                     </div>
                 {% endfor %}
+                </div>
             </div>
         {% endfor %}
 
@@ -265,6 +278,12 @@
             const details = header.closest(".request-result").querySelector(".request-details");
             const isOpen = details.classList.toggle("open");
             header.querySelector(".toggle").innerHTML = isOpen ? "&#9660;" : "&#9654;";
+        }
+
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const isClosed = content.classList.toggle("closed");
+            header.querySelector(".toggle").innerHTML = isClosed ? "&#9654;" : "&#9660;";
         }
 
         function setAll(open) {
