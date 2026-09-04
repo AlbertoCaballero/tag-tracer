@@ -298,3 +298,163 @@ def test_validate_vendor_scoped_tags_missing_vendor(multi_vendor_config, sample_
     page = summary.page_results[0]
     assert page.overall_status == "failed"
     assert page.matched_requests_count == 1
+
+
+def test_request_result_exposes_all_params(sample_excel_config, sample_matcher):
+    """Request results must expose the full query and body params for the report."""
+    validator = Validator(sample_excel_config, sample_matcher)
+    requests = [
+        NetworkRequest(
+            url="http://google-analytics.com/collect?v=1&ev=page_view&extra=foo",
+            method="POST",
+            headers={},
+            post_data="user_id=123&data=payload",
+        ),
+    ]
+
+    summary = validator.validate(requests)
+
+    page = next(p for p in summary.page_results if p.page_id == "home_page")
+    req = page.request_results[0]
+    assert req.query_params == {"v": "1", "ev": "page_view", "extra": "foo"}
+    assert req.body_params == {"user_id": "123", "data": "payload"}
+    assert req.method == "POST"
+
+
+def test_page_result_exposes_expected_and_found_tags(sample_excel_config, sample_matcher):
+    """Pages must expose their expected tags and the tags actually found."""
+    validator = Validator(sample_excel_config, sample_matcher)
+    requests = [
+        NetworkRequest(
+            url="http://google-analytics.com/collect?event=page_view&page_location=http%3A%2F%2Flocalhost%3A8000%2F&campaign_id=CID-123&user_id=ABC&optional_param=some_value",
+            method="GET",
+            headers={},
+            post_data=None,
+        ),
+    ]
+
+    summary = validator.validate(requests)
+
+    page = next(p for p in summary.page_results if p.page_id == "home_page")
+    assert set(page.expected_tags.keys()) == {
+        "event", "page_location", "campaign_id", "user_id", "optional_param",
+    }
+    assert page.found_tags == {
+        "event": "page_view",
+        "page_location": "http://localhost:8000/",
+        "campaign_id": "CID-123",
+        "user_id": "ABC",
+        "optional_param": "some_value",
+    }
+    status_by_key = {t["key"]: t for t in page.expected_tag_status}
+    assert status_by_key["event"]["found"] is True
+    assert status_by_key["optional_param"]["found"] is True
+    assert status_by_key["page_location"]["field"] == "page_location"
+
+
+def test_page_result_vendor_prefix_found_status(multi_vendor_config, sample_matcher):
+    """Vendor-prefixed expected tags resolve to their real param for found status."""
+    validator = Validator(multi_vendor_config, sample_matcher)
+    requests = [
+        NetworkRequest(
+            url="https://www.facebook.com/tr/?ev=ViewContent&cd=aut-ins",
+            method="GET",
+            headers={},
+            post_data=None,
+        ),
+    ]
+
+    summary = validator.validate(requests)
+
+    page = summary.page_results[0]
+    status_by_key = {t["key"]: t for t in page.expected_tag_status}
+    assert status_by_key["meta-ev"]["found"] is True
+    assert status_by_key["meta-ev"]["field"] == "ev"
+    assert status_by_key["google-ad"]["found"] is False
+
+
+@pytest.fixture
+def field_location_config():
+    """Vendor that declares query, body (nested JSON), and header fields."""
+    return ExcelConfig(
+        vendors={
+            "mkt": VendorConfig(
+                domains=["mkt.example.com"],
+                query_fields=["ev", "cd"],
+                body_fields=["data.field", "data.something"],
+                header_fields=["x-mkt-id"],
+            ),
+        },
+        pages=[
+            PageConfig(
+                id="home",
+                target_url="https://example.com/home",
+                page_vendors=["mkt"],
+                expected_tags={
+                    "mkt-ev": "ViewContent",
+                    "mkt-data.field": "abc",
+                    "mkt-x-mkt-id": "hdr-42",
+                },
+            ),
+        ],
+    )
+
+
+def test_validate_field_locations(field_location_config, sample_matcher):
+    """Fields are looked up in the location declared by the vendor config."""
+    validator = Validator(field_location_config, sample_matcher)
+    requests = [
+        NetworkRequest(
+            url="https://mkt.example.com/track?ev=ViewContent&cd=aut-ins",
+            method="POST",
+            headers={"X-Mkt-Id": "hdr-42", "User-Agent": "tag-tracer"},
+            post_data='{"data": {"field": "abc", "something": "xyz"}}',
+        ),
+    ]
+
+    summary = validator.validate(requests)
+
+    page = summary.page_results[0]
+    req = page.request_results[0]
+    assert req.query_params == {"ev": "ViewContent", "cd": "aut-ins"}
+    assert req.body_params == {"data.field": "abc", "data.something": "xyz"}
+    assert req.header_params == {"x-mkt-id": "hdr-42", "user-agent": "tag-tracer"}
+
+    by_key = {t.key: t for t in req.tags_validated}
+    assert by_key["mkt-ev"].location == "query"
+    assert by_key["mkt-ev"].actual_value == "ViewContent"
+    assert by_key["mkt-ev"].status == "passed"
+
+    assert by_key["mkt-data.field"].location == "body"
+    assert by_key["mkt-data.field"].actual_value == "abc"
+    assert by_key["mkt-data.field"].status == "passed"
+
+    assert by_key["mkt-x-mkt-id"].location == "header"
+    assert by_key["mkt-x-mkt-id"].actual_value == "hdr-42"
+    assert by_key["mkt-x-mkt-id"].status == "passed"
+
+    assert page.overall_status == "passed"
+
+
+def test_validate_field_location_wrong_source(field_location_config, sample_matcher):
+    """A field in the wrong location must not match (query field missing from body)."""
+    validator = Validator(field_location_config, sample_matcher)
+    # ev is a query-field but only present in the body -> must not be found
+    requests = [
+        NetworkRequest(
+            url="https://mkt.example.com/track",
+            method="POST",
+            headers={},
+            post_data="ev=ViewContent",
+        ),
+    ]
+
+    summary = validator.validate(requests)
+
+    page = summary.page_results[0]
+    req = page.request_results[0]
+    ev_tag = next(t for t in req.tags_validated if t.key == "mkt-ev")
+    assert ev_tag.location == "query"
+    assert ev_tag.actual_value is None
+    assert ev_tag.status == "failed"
+    assert page.overall_status == "failed"

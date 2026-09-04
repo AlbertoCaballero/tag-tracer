@@ -19,7 +19,9 @@ def generate_html_report(summary: ValidationSummary, output_dir: str, filename: 
     file_path = os.path.join(output_dir, filename)
 
     template_dir = os.path.join(os.path.dirname(__file__), "templates")
-    env = Environment(loader=FileSystemLoader(template_dir))
+    env = Environment(
+        loader=FileSystemLoader(template_dir), autoescape=True
+    )
     template = env.get_template("report_template.html")
 
     html_output = template.render(

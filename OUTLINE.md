@@ -153,7 +153,27 @@ tag-tracer/
 * [x] Implement Playwright launcher
 * [x] Implement network request capture
 * [x] Normalize URLs, parameters, payload
-* [ ] Store network calls in json report for reference (maybe)
+* [x] Store network calls in json report for reference (maybe)
+* [x] Enhanced HTML report: show all captured requests with all found parameters
+
+#### **3.1 Enhanced HTML Report Plan**
+
+Goal: make the HTML report a browsable view of every request captured during a
+scan, not just the validated tags.
+
+* **Show all requests** — list every captured request (URL, method, vendor,
+  status) grouped by page, each with an expandable detail view.
+* **All parameters found** — the detail view exposes every query, body, and
+  header parameter captured for the request, not only the expected-tag keys.
+* **Show / hide** — per-request expand/collapse toggle plus global
+  "Expand all" / "Collapse all" controls.
+* **Filters** (client-side, applied live):
+  * by name (vendor and/or page ID)
+  * by URL (substring on request URL)
+  * by parameter (substring on any parameter key)
+  * by page status (passed / failed)
+* **Data flow** — `RequestValidationResult` carries the full `query_params`
+  and `body_params` dicts so the template can render them without re-parsing.
 
 ### **Phase 4 — Tag Matching & Validation**
 

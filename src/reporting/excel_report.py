@@ -24,7 +24,7 @@ def generate_excel_report(summary: ValidationSummary, output_dir: str, filename:
 
     file_path = os.path.join(output_dir, filename)
 
-    writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
+    writer = pd.ExcelWriter(file_path, engine="openpyxl")
 
     # Summary Sheet
     summary_data = {
@@ -53,6 +53,8 @@ def generate_excel_report(summary: ValidationSummary, output_dir: str, filename:
                         "Vendor Name": request.vendor_name,
                         "Request Overall Status": request.overall_status,
                         "Tag Key": tag.key,
+                        "Field": tag.field,
+                        "Location": tag.location,
                         "Expected Value": tag.expected_value,
                         "Actual Value": tag.actual_value,
                         "Rule Type": tag.rule_type,
@@ -76,6 +78,8 @@ def generate_excel_report(summary: ValidationSummary, output_dir: str, filename:
                 "Vendor Name",
                 "Request Overall Status",
                 "Tag Key",
+                "Field",
+                "Location",
                 "Expected Value",
                 "Actual Value",
                 "Rule Type",

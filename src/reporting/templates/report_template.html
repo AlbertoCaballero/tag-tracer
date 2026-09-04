@@ -7,9 +7,16 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
         .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-        h1, h2, h3 { color: #0056b3; }
+        h1, h2, h3, h4, h5 { color: #0056b3; }
         .summary { background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
         .summary p { margin: 5px 0; }
+
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; margin-bottom: 20px; }
+        .toolbar input[type="text"], .toolbar select { padding: 6px 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.9em; }
+        .toolbar input[type="text"] { flex: 1 1 160px; min-width: 140px; }
+        .toolbar button { padding: 6px 12px; border: 1px solid #ced4da; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 0.9em; }
+        .toolbar button:hover { background-color: #e9ecef; }
+
         .page-result, .request-result, .tag-result { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; padding: 10px; }
         .page-result.passed { border-left: 5px solid #28a745; }
         .page-result.failed { border-left: 5px solid #dc3545; }
@@ -21,6 +28,26 @@
         .status-badge.passed { background-color: #28a745; color: #fff; }
         .status-badge.failed { background-color: #dc3545; color: #fff; }
         pre { background-color: #eee; padding: 10px; border-radius: 5px; overflow-x: auto; }
+
+        .request-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin: 0; }
+        .request-header .toggle { font-size: 0.85em; color: #0056b3; }
+        .request-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; }
+        .request-details.open { display: block; }
+        .request-details table { border-collapse: collapse; width: 100%; margin: 6px 0 12px; font-size: 0.9em; }
+        .request-details th, .request-details td { border: 1px solid #ddd; padding: 4px 8px; text-align: left; }
+        .request-details th { background-color: #f1f3f5; }
+        .param-key { font-family: monospace; word-break: break-all; }
+        .param-value { font-family: monospace; word-break: break-all; }
+        .request-method { font-family: monospace; font-size: 0.85em; background-color: #e9ecef; padding: 2px 6px; border-radius: 3px; }
+        .page-tags { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; margin: 10px 0; }
+        .page-tags table { border-collapse: collapse; width: 100%; margin: 6px 0 12px; font-size: 0.9em; }
+        .page-tags th, .page-tags td { border: 1px solid #ddd; padding: 4px 8px; text-align: left; }
+        .page-tags th { background-color: #e9ecef; }
+        .location { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.8em; background-color: #d1e7ff; color: #084298; font-family: monospace; }
+
+        .hidden { display: none !important; }
+        .empty-state { color: #666; font-style: italic; padding: 20px; text-align: center; }
+        .match-count { margin-left: 10px; font-size: 0.85em; color: #666; }
     </style>
 </head>
 <body>
@@ -35,30 +62,226 @@
             <p><strong>Pages Failed:</strong> {{ summary.pages_failed }}</p>
         </div>
 
+        <div class="toolbar">
+            <input type="text" id="filter-name" placeholder="Filter by name (page / vendor)..." autocomplete="off">
+            <input type="text" id="filter-url" placeholder="Filter by URL..." autocomplete="off">
+            <input type="text" id="filter-param" placeholder="Filter by parameter..." autocomplete="off">
+            <select id="filter-status">
+                <option value="">All pages</option>
+                <option value="passed">Passed pages</option>
+                <option value="failed">Failed pages</option>
+            </select>
+            <button type="button" id="expand-all">Expand all</button>
+            <button type="button" id="collapse-all">Collapse all</button>
+            <span class="match-count" id="match-count"></span>
+        </div>
+
         {% for page in summary.page_results %}
-            <div class="page-result {{ page.overall_status }}">
+            <div class="page-result {{ page.overall_status }}"
+                 data-status="{{ page.overall_status }}"
+                 data-name="{{ page.page_id }}"
+                 data-url="{{ page.page_url }}">
                 <h3>Page: {{ page.page_id }} <span class="status-badge {{ page.overall_status }}">{{ page.overall_status|upper }}</span></h3>
                 <p><strong>URL:</strong> <a href="{{ page.page_url }}" target="_blank">{{ page.page_url }}</a></p>
                 <p>Expected Tags: {{ page.expected_tags_count }} | Matched Requests: {{ page.matched_requests_count }}</p>
 
-                {% for request in page.request_results %}
-                    <div class="request-result {{ request.overall_status }}">
-                        <h4>Request: {{ request.request_url }} <span class="status-badge {{ request.overall_status }}">{{ request.overall_status|upper }}</span></h4>
-                        <p><strong>Vendor:</strong> {{ request.vendor_name }}</p>
-                        <p><strong>Matched Domains:</strong> {{ request.matched_domains|join(", ") }}</p>
-                        <h5>Tag Validations:</h5>
-                        <ul>
-                            {% for tag in request.tags_validated %}
-                                <li class="tag-result {{ tag.status }}">
-                                    <strong>{{ tag.key }}:</strong> Expected <code>{{ tag.expected_value }}</code>, Actual <code>{{ tag.actual_value }}</code> (Rule: {{ tag.rule_type }})
-                                    <span class="status-badge {{ tag.status }}">{{ tag.status|upper }}</span> - {{ tag.message }}
-                                </li>
+                <div class="page-tags">
+                    <h4>Expected Tags</h4>
+                    <table>
+                        <thead>
+                            <tr><th>Tag</th><th>Vendor</th><th>Field</th><th>Location</th><th>Expected Value</th><th>Actual Value</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for tag in page.expected_tag_status %}
+                                <tr>
+                                    <td class="param-key">{{ tag.key }}</td>
+                                    <td>{{ tag.vendor or '-' }}</td>
+                                    <td class="param-key">{{ tag.field }}</td>
+                                    <td><span class="location">{{ tag.location }}</span></td>
+                                    <td class="param-value">{{ tag.expected_value if tag.expected_value is not mapping else tag.expected_value.get('value', '') }}</td>
+                                    <td class="param-value">{{ tag.actual_value or '' }}</td>
+                                    <td>
+                                        {% if tag.found %}
+                                            <span class="status-badge passed">found</span>
+                                        {% else %}
+                                            <span class="status-badge failed">missing</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
                             {% endfor %}
-                        </ul>
+                        </tbody>
+                    </table>
+
+                    <h4>Found Tags</h4>
+                    <table>
+                        <thead>
+                            <tr><th>Param</th><th>Value</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for key, value in page.found_tags.items() %}
+                                <tr><td class="param-key">{{ key }}</td><td class="param-value">{{ value }}</td></tr>
+                            {% else %}
+                                <tr><td colspan="2">No tags found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% for request in page.request_results %}
+                    <div class="request-result {{ request.overall_status }}"
+                         data-status="{{ request.overall_status }}"
+                         data-vendor="{{ request.vendor_name }}"
+                         data-url="{{ request.request_url }}"
+                         data-params="{{ request.query_params.keys()|join(',') }},{{ request.body_params.keys()|join(',') }},{{ request.header_params.keys()|join(',') }}">
+                        <h4 class="request-header" onclick="toggleRequest(this)">
+                            <span class="toggle">&#9654;</span>
+                            <span class="request-method">{{ request.method or 'GET' }}</span>
+                            <span class="param-key">{{ request.request_url }}</span>
+                            <span class="status-badge {{ request.overall_status }}">{{ request.overall_status|upper }}</span>
+                        </h4>
+                        <div class="request-details">
+                            <p><strong>Vendor:</strong> {{ request.vendor_name }}</p>
+                            <p><strong>Matched Domains:</strong> {{ request.matched_domains|join(", ") }}</p>
+
+                            {% if request.query_params %}
+                                <h5>Query Parameters</h5>
+                                <table>
+                                    <thead>
+                                        <tr><th>Key</th><th>Value</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key, value in request.query_params.items() %}
+                                            <tr><td class="param-key">{{ key }}</td><td class="param-value">{{ value }}</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+
+                            {% if request.body_params %}
+                                <h5>Body Parameters</h5>
+                                <table>
+                                    <thead>
+                                        <tr><th>Key</th><th>Value</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key, value in request.body_params.items() %}
+                                            <tr><td class="param-key">{{ key }}</td><td class="param-value">{{ value }}</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+
+                            {% if request.header_params %}
+                                <h5>Headers</h5>
+                                <table>
+                                    <thead>
+                                        <tr><th>Key</th><th>Value</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key, value in request.header_params.items() %}
+                                            <tr><td class="param-key">{{ key }}</td><td class="param-value">{{ value }}</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+
+                            <h5>Tag Validations</h5>
+                            <ul>
+                                {% for tag in request.tags_validated %}
+                                    <li class="tag-result {{ tag.status }}">
+                                        <strong>{{ tag.key }}</strong> ({{ tag.field }} &middot; {{ tag.location }}):
+                                        Expected <code>{{ tag.expected_value }}</code>, Actual <code>{{ tag.actual_value }}</code> (Rule: {{ tag.rule_type }})
+                                        <span class="status-badge {{ tag.status }}">{{ tag.status|upper }}</span> - {{ tag.message }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
         {% endfor %}
+
+        <div class="empty-state hidden" id="empty-state">No results match the current filters.</div>
     </div>
+
+    <script>
+        function norm(value) {
+            return (value || "").toString().toLowerCase().trim();
+        }
+
+        function applyFilters() {
+            const nameFilter = norm(document.getElementById("filter-name").value);
+            const urlFilter = norm(document.getElementById("filter-url").value);
+            const paramFilter = norm(document.getElementById("filter-param").value);
+            const statusFilter = document.getElementById("filter-status").value;
+            const hasRequestFilter = nameFilter || urlFilter || paramFilter;
+
+            let visiblePages = 0;
+            let visibleRequests = 0;
+
+            document.querySelectorAll(".page-result").forEach(function (page) {
+                let pageVisible = statusFilter === "" || page.dataset.status === statusFilter;
+                let anyVisible = false;
+
+                page.querySelectorAll(".request-result").forEach(function (req) {
+                    let visible = true;
+                    if (nameFilter) {
+                        visible = visible && (
+                            norm(req.dataset.vendor).includes(nameFilter) ||
+                            norm(page.dataset.name).includes(nameFilter)
+                        );
+                    }
+                    if (urlFilter) {
+                        visible = visible && norm(req.dataset.url).includes(urlFilter);
+                    }
+                    if (paramFilter) {
+                        visible = visible && norm(req.dataset.params).includes(paramFilter);
+                    }
+
+                    req.classList.toggle("hidden", !visible);
+                    if (visible) {
+                        anyVisible = true;
+                        visibleRequests++;
+                    }
+                });
+
+                if (hasRequestFilter) {
+                    pageVisible = pageVisible && anyVisible;
+                }
+                page.classList.toggle("hidden", !pageVisible);
+                if (pageVisible) {
+                    visiblePages++;
+                }
+            });
+
+            document.getElementById("match-count").textContent =
+                visiblePages + " page(s) / " + visibleRequests + " request(s)";
+            document.getElementById("empty-state").classList.toggle(
+                "hidden", visiblePages > 0
+            );
+        }
+
+        function toggleRequest(header) {
+            const details = header.closest(".request-result").querySelector(".request-details");
+            const isOpen = details.classList.toggle("open");
+            header.querySelector(".toggle").innerHTML = isOpen ? "&#9660;" : "&#9654;";
+        }
+
+        function setAll(open) {
+            document.querySelectorAll(".request-details").forEach(function (details) {
+                details.classList.toggle("open", open);
+            });
+            document.querySelectorAll(".request-header .toggle").forEach(function (icon) {
+                icon.innerHTML = open ? "&#9660;" : "&#9654;";
+            });
+        }
+
+        ["filter-name", "filter-url", "filter-param"].forEach(function (id) {
+            document.getElementById(id).addEventListener("input", applyFilters);
+        });
+        document.getElementById("filter-status").addEventListener("change", applyFilters);
+        document.getElementById("expand-all").addEventListener("click", function () { setAll(true); });
+        document.getElementById("collapse-all").addEventListener("click", function () { setAll(false); });
+    </script>
 </body>
 </html>

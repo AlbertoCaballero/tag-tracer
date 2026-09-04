@@ -2,6 +2,7 @@
 Validation module for TagTracer.
 """
 
+import json
 from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
 
@@ -15,6 +16,8 @@ from src.validation.rules import ExpectedTag, ValidationRule
 
 class TagValidationResult(BaseModel):
     key: str
+    field: str = ""
+    location: str = ""
     expected_value: Any
     actual_value: Any
     rule_type: str
@@ -25,8 +28,12 @@ class TagValidationResult(BaseModel):
 
 class RequestValidationResult(BaseModel):
     request_url: str
+    method: str = ""
     vendor_name: str
     matched_domains: List[str]
+    query_params: Dict[str, Any] = {}
+    body_params: Dict[str, Any] = {}
+    header_params: Dict[str, Any] = {}
     tags_validated: List[TagValidationResult]
     overall_status: str
 
@@ -36,6 +43,9 @@ class PageValidationResult(BaseModel):
     page_url: str
     expected_tags_count: int
     matched_requests_count: int
+    expected_tags: Dict[str, Any] = {}
+    found_tags: Dict[str, Any] = {}
+    expected_tag_status: List[Dict[str, Any]] = []
     request_results: List[RequestValidationResult]
     overall_status: str
 
@@ -91,18 +101,8 @@ class Validator:
                 # Extract parameters from request
                 parsed_url = urlparse(req_url)
                 query_params = {k: v[0] for k, v in parse_qs(parsed_url.query).items()}
-                body_params = {}
-                if req.post_data:
-                    # Assuming JSON or form-encoded; simple parse_qs for now
-                    try:
-                        # Attempt to parse as form-encoded
-                        body_params = {
-                            k: v[0] for k, v in parse_qs(req.post_data).items()
-                        }
-                    except Exception:
-                        pass  # Could be JSON, not handled by parse_qs
-
-                all_params = {**query_params, **body_params}
+                body_params = self._parse_body_params(req.post_data)
+                header_params = self._normalize_headers(req.headers or {})
 
                 # Validate expected tags for this page, scoped to the request's vendor
                 for expected_tag_key, expected_tag_value in page.expected_tags.items():
@@ -124,8 +124,14 @@ class Validator:
 
                     # The ExpectedTag key is the actual parameter name used for lookup
                     expected_tag = ExpectedTag(key=param_name, **tag_data)
-    
-                    actual_value = all_params.get(expected_tag.key)
+
+                    # Resolve where the field should live from the owning vendor's config
+                    field_locations = self._field_locations(owning_vendor or vendor_name)
+                    actual_value, source = self._lookup_value(
+                        param_name, field_locations, query_params, body_params, header_params
+                    )
+                    location = source or field_locations.get(param_name) or "N/A"
+
                     tag_status = "failed"
                     tag_message = "No matching rule passed"
 
@@ -144,6 +150,8 @@ class Validator:
                     tags_validated.append(
                         TagValidationResult(
                             key=expected_tag_key,
+                            field=param_name,
+                            location=location,
                             expected_value=rule.value if rule_passed and rule.value is not None else expected_tag.value,
                             actual_value=actual_value,
                             rule_type=rule.type if rule_passed else "N/A",
@@ -156,8 +164,12 @@ class Validator:
                 page_matched_requests.append(
                     RequestValidationResult(
                         request_url=req_url,
+                        method=req.method,
                         vendor_name=vendor_name,
                         matched_domains=matched_domains,
+                        query_params=query_params,
+                        body_params=body_params,
+                        header_params=header_params,
                         tags_validated=tags_validated,
                         overall_status=request_overall_status,
                     )
@@ -177,12 +189,47 @@ class Validator:
                 page_overall_status = "passed"
                 pages_passed += 1
 
+            # Aggregate every parameter actually found across the page's requests
+            found_tags: Dict[str, Any] = {}
+            for req_res in page_matched_requests:
+                found_tags.update(req_res.query_params)
+                found_tags.update(req_res.body_params)
+
+            # Resolve each expected tag to its field/location and mark found/missing
+            expected_tag_status: List[Dict[str, Any]] = []
+            page_query, page_body, page_headers = self._page_params_by_location(
+                page_matched_requests
+            )
+            for tag_key, tag_value in page.expected_tags.items():
+                owning_vendor, field = self._resolve_tag_key(tag_key, page.page_vendors)
+                field_locations = self._field_locations(owning_vendor)
+                location = field_locations.get(field) or "N/A"
+
+                actual_value, source = self._lookup_value(
+                    field, field_locations, page_query, page_body, page_headers
+                )
+                found = actual_value is not None
+                expected_tag_status.append(
+                    {
+                        "key": tag_key,
+                        "vendor": owning_vendor or "",
+                        "field": field,
+                        "location": source or location,
+                        "expected_value": tag_value,
+                        "actual_value": actual_value,
+                        "found": found,
+                    }
+                )
+
             page_results.append(
                 PageValidationResult(
                     page_id=page.id,
                     page_url=page.target_url,
                     expected_tags_count=len(page.expected_tags),
                     matched_requests_count=matched_requests_count,
+                    expected_tags=page.expected_tags,
+                    found_tags=found_tags,
+                    expected_tag_status=expected_tag_status,
                     request_results=page_matched_requests,
                     overall_status=page_overall_status,
                 )
@@ -198,6 +245,114 @@ class Validator:
             f"\n[Validator] Validation complete. Pages passed: {pages_passed}/{total_pages_scanned}"
         )
         return summary
+
+    @staticmethod
+    def _flatten_json(obj: Dict[str, Any], prefix: str = "", result: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Flattens a nested JSON object into dotted paths, e.g.
+        {'data': {'field': 'x'}} -> {'data.field': 'x'}.
+        """
+        if result is None:
+            result = {}
+        for key, value in obj.items():
+            full_key = f"{prefix}.{key}" if prefix else str(key)
+            if isinstance(value, dict):
+                Validator._flatten_json(value, full_key, result)
+            elif isinstance(value, list):
+                result[full_key] = json.dumps(value)
+            else:
+                result[full_key] = value
+        return result
+
+    @staticmethod
+    def _parse_body_params(post_data: Optional[str]) -> Dict[str, Any]:
+        """
+        Parses a request body into a flat dict of parameters.
+        Supports form-encoded and JSON bodies; nested JSON objects are
+        flattened into dotted paths (e.g. {'data': {'field': 'x'}} -> {'data.field': 'x'}).
+        """
+        if not post_data:
+            return {}
+        stripped = post_data.strip()
+        if stripped.startswith(("{", "[")):
+            try:
+                payload = json.loads(stripped)
+                if isinstance(payload, dict):
+                    return Validator._flatten_json(payload)
+                return {}
+            except (json.JSONDecodeError, ValueError):
+                pass
+        try:
+            return {k: v[0] for k, v in parse_qs(post_data).items()}
+        except Exception:
+            return {}
+
+    @staticmethod
+    def _normalize_headers(headers: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalizes header keys to lowercase (HTTP headers are case-insensitive)."""
+        return {str(k).lower(): v for k, v in headers.items()}
+
+    def _field_locations(self, vendor_name: Optional[str]) -> Dict[str, str]:
+        """
+        Builds a map of field name -> parameter location ('query' | 'body' | 'header')
+        from a vendor's declared query/body/header fields.
+        """
+        config = self.config.vendors.get(vendor_name or "")
+        if not config:
+            return {}
+        locations: Dict[str, str] = {}
+        for field in config.query_fields:
+            locations[field] = "query"
+        for field in config.body_fields:
+            locations[field] = "body"
+        for field in config.header_fields:
+            locations[field] = "header"
+        return locations
+
+    @staticmethod
+    def _lookup_value(
+        field: str,
+        field_locations: Dict[str, str],
+        query_params: Dict[str, Any],
+        body_params: Dict[str, Any],
+        header_params: Dict[str, Any],
+    ) -> tuple:
+        """
+        Returns (value, location) for a field. If the field is declared in the
+        vendor config, only the declared location is checked; otherwise all
+        sources are searched (query -> body -> header).
+        """
+        location = field_locations.get(field)
+        if location == "query":
+            return query_params.get(field), "query"
+        if location == "body":
+            return body_params.get(field), "body"
+        if location == "header":
+            return header_params.get(field.lower()), "header"
+
+        for loc, params in (
+            ("query", query_params),
+            ("body", body_params),
+            ("header", header_params),
+        ):
+            value = params.get(field.lower() if loc == "header" else field)
+            if value is not None:
+                return value, loc
+        return None, None
+
+    @staticmethod
+    def _page_params_by_location(
+        page_matched_requests: List[RequestValidationResult],
+    ) -> tuple:
+        """Aggregates query, body, and header params across all page requests."""
+        query: Dict[str, Any] = {}
+        body: Dict[str, Any] = {}
+        headers: Dict[str, Any] = {}
+        for req_res in page_matched_requests:
+            query.update(req_res.query_params)
+            body.update(req_res.body_params)
+            headers.update(req_res.header_params)
+        return query, body, headers
 
     @staticmethod
     def _resolve_tag_key(key: str, page_vendors: List[str]):
