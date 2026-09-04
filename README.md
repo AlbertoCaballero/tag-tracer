@@ -1,4 +1,4 @@
-# TagTracer
+# tag-tracer
 
 <div align="center">
 

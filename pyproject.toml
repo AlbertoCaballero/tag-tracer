@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tag-tracer"
 version = "0.1.0"
-description = "Automated marketing and analytics tag tracing tool using headless browsing and rule-based validation."
+description = "Automated marketing and analytics tag tracing tool using browser automation and rule-based validation."
 authors = [
     { name = "Alberto Caballero", email = "albertoCaballero80@outlook.com" }
 ]
@@ -26,5 +26,9 @@ dependencies = [
 [project.scripts]
 tag-tracer = "src.cli:main"
 
-[tool.setuptools]
-packages = ["src"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+"src.reporting" = ["templates/*.html"]
