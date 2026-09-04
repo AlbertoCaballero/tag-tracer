@@ -200,7 +200,7 @@ scan, not just the validated tags. Implemented.
 
 ### **Phase 4 — Tag Matching & Validation**
 
-* [x] Match requests to vendor domains
+* [x] Match requests to vendor domains (hostname-based, subdomain-aware)
 * [x] Extract query, body, and header parameters (incl. JSON body flattening)
 * [x] Location-aware field lookup (query/body/header) with fallback
 * [x] Vendor-scoped expected tags (e.g. `meta-ev` → vendor `meta`, field `ev`)
@@ -261,4 +261,3 @@ workflow.
 * Scheduled runs with alerts
 * YAML configuration support
 * User-interaction simulation (clicks / scrolls) to trigger late-firing tags
-* Hostname-based domain matching (avoid substring false positives)

@@ -352,6 +352,34 @@ def test_page_result_exposes_expected_and_found_tags(sample_excel_config, sample
     assert status_by_key["page_location"]["field"] == "page_location"
 
 
+def test_validate_domain_matching_avoids_substring_false_positive(sample_matcher):
+    """Requests to lookalike domains must not be attributed to a vendor."""
+    config = ExcelConfig(
+        vendors={
+            "meta": VendorConfig(domains=["www.facebook.com"]),
+        },
+        pages=[
+            PageConfig(
+                id="home",
+                target_url="https://example.com/home",
+                page_vendors=["meta"],
+                expected_tags={"meta-ev": "ViewContent"},
+            ),
+        ],
+    )
+    validator = Validator(config, sample_matcher)
+
+    # notfacebook.com contains "facebook.com" as a substring but is a different host
+    summary = validator.validate(
+        [NetworkRequest(url="https://www.notfacebook.com/tr/?ev=ViewContent", method="GET", headers={}, post_data=None)]
+    )
+
+    page = summary.page_results[0]
+    assert page.matched_requests_count == 0
+    assert page.overall_status == "failed"
+    assert page.request_results == []
+
+
 def test_page_result_actual_value_not_polluted_across_vendors(sample_matcher):
     """Page-level actual values must come from the owning vendor's request only."""
     config = ExcelConfig(

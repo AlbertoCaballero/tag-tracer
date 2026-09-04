@@ -7,6 +7,7 @@ import json
 from typing import List
 
 from src.models import NetworkRequest
+from src.utils.utils import url_matches_domain
 
 
 class NetworkCapture:
@@ -18,11 +19,14 @@ class NetworkCapture:
         if not self.domain_filters:
             return requests
 
-        filtered = []
-        for request in requests:
-            if any(domain in request.url for domain in self.domain_filters):
-                filtered.append(request)
-        return filtered
+        return [
+            request
+            for request in requests
+            if any(
+                url_matches_domain(request.url, domain)
+                for domain in self.domain_filters
+            )
+        ]
 
     def save_requests_to_json(self, requests: List[NetworkRequest], filename: str = "captured_requests.json"):
         if not self.output_dir:

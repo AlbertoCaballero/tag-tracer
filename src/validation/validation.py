@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from src.config.loader import ExcelConfig, PageConfig
 from src.models import NetworkRequest
+from src.utils.utils import url_matches_domain
 from src.validation.matcher import Matcher
 from src.validation.rules import ExpectedTag, ValidationRule
 
@@ -85,9 +86,14 @@ class Validator:
 
                 # Determine which vendor this request belongs to
                 for v_name, v_config in self.config.vendors.items():
-                    if any(domain in req_url for domain in v_config.domains):
+                    if any(
+                        url_matches_domain(req_url, domain)
+                        for domain in v_config.domains
+                    ):
                         vendor_name = v_name
-                        matched_domains = [d for d in v_config.domains if d in req_url]
+                        matched_domains = [
+                            d for d in v_config.domains if url_matches_domain(req_url, d)
+                        ]
                         break
 
                 if not vendor_name:
@@ -389,6 +395,9 @@ class Validator:
                 vendor_domains_for_page.update(vendor_config.domains)
 
         for req in captured_requests:
-            if any(domain in req.url for domain in vendor_domains_for_page):
+            if any(
+                url_matches_domain(req.url, domain)
+                for domain in vendor_domains_for_page
+            ):
                 relevant_requests.append(req)
         return relevant_requests
