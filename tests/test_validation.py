@@ -352,6 +352,37 @@ def test_page_result_exposes_expected_and_found_tags(sample_excel_config, sample
     assert status_by_key["page_location"]["field"] == "page_location"
 
 
+def test_page_result_actual_value_not_polluted_across_vendors(sample_matcher):
+    """Page-level actual values must come from the owning vendor's request only."""
+    config = ExcelConfig(
+        vendors={
+            "v1": VendorConfig(domains=["a.example.com"], query_fields=["id"]),
+            "v2": VendorConfig(domains=["b.example.com"], query_fields=["id"]),
+        },
+        pages=[
+            PageConfig(
+                id="home",
+                target_url="https://example.com/home",
+                page_vendors=["v1", "v2"],
+                expected_tags={"v1-id": "111", "v2-id": "222"},
+            ),
+        ],
+    )
+    validator = Validator(config, sample_matcher)
+    requests = [
+        NetworkRequest(url="https://a.example.com/track?id=111", method="GET", headers={}, post_data=None),
+        NetworkRequest(url="https://b.example.com/track?id=222", method="GET", headers={}, post_data=None),
+    ]
+
+    summary = validator.validate(requests)
+
+    page = summary.page_results[0]
+    status_by_key = {t["key"]: t for t in page.expected_tag_status}
+    assert status_by_key["v1-id"]["actual_value"] == "111"
+    assert status_by_key["v2-id"]["actual_value"] == "222"
+    assert page.overall_status == "passed"
+
+
 def test_page_result_vendor_prefix_found_status(multi_vendor_config, sample_matcher):
     """Vendor-prefixed expected tags resolve to their real param for found status."""
     validator = Validator(multi_vendor_config, sample_matcher)
@@ -436,10 +467,11 @@ def test_validate_field_locations(field_location_config, sample_matcher):
     assert page.overall_status == "passed"
 
 
-def test_validate_field_location_wrong_source(field_location_config, sample_matcher):
-    """A field in the wrong location must not match (query field missing from body)."""
+def test_validate_field_location_fallback(field_location_config, sample_matcher):
+    """A field absent from its declared location is still found via fallback."""
     validator = Validator(field_location_config, sample_matcher)
-    # ev is a query-field but only present in the body -> must not be found
+    # ev is a query-field but only present in the body -> found via fallback,
+    # reported with the actual source location
     requests = [
         NetworkRequest(
             url="https://mkt.example.com/track",
@@ -454,7 +486,6 @@ def test_validate_field_location_wrong_source(field_location_config, sample_matc
     page = summary.page_results[0]
     req = page.request_results[0]
     ev_tag = next(t for t in req.tags_validated if t.key == "mkt-ev")
-    assert ev_tag.location == "query"
-    assert ev_tag.actual_value is None
-    assert ev_tag.status == "failed"
-    assert page.overall_status == "failed"
+    assert ev_tag.location == "body"
+    assert ev_tag.actual_value == "ViewContent"
+    assert ev_tag.status == "passed"

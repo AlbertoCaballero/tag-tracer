@@ -2,43 +2,30 @@ import sys
 from src.browser.browser import BrowserManager
 from src.config.loader import ExcelLoader
 from src.network_capture.network_capture import NetworkCapture
+from src.reporting.console_report import (
+    print_captured_requests,
+    print_config_summary,
+    print_header,
+    print_validation_summary,
+)
 from src.reporting.reporting import Reporting
-from src.utils.utils import print_expected_tags
 from src.validation.matcher import Matcher
 from src.validation.validation import Validator
 
 
 async def scan(args):
-    print(f"\n[TagTracer] Scan requested for URL: {args.url}")
-    loader = ExcelLoader(args.config)
-    config_data = loader.load()
-    if args.config:
-        try:
-            print(f"[TagTracer] Loading configuration from: {args.config}")
-            print("[TagTracer] Configuration loaded successfully.")
-            print("\n[Vendors]")
-            for vendor_name, vendor_config in config_data.vendors.items():
-                print(f"  - {vendor_name}:")
-                if vendor_config.domains:
-                    print(f"    Domains: {vendor_config.domains}")
-                if vendor_config.query_fields:
-                    print(f"    Query Fields: {vendor_config.query_fields}")
-                if vendor_config.body_fields:
-                    print(f"    Body Fields: {vendor_config.body_fields}")
-                if vendor_config.header_fields:
-                    print(f"    Header Fields: {vendor_config.header_fields}")
+    print_header(
+        "TagTracer Scan",
+        f"URL: {args.url}",
+    )
 
-            print("\n[Pages]")
-            for page in config_data.pages:
-                print(f"    ID: {page.id}")
-                print(f"    URL: {page.target_url}")
-                print("    Expected Tags:")
-                print_expected_tags(page.expected_tags)
-        except Exception as e:
-            print(
-                f"[TagTracer] Error loading configuration: {e}", file=sys.stderr
-            )
-            sys.exit(1)
+    try:
+        loader = ExcelLoader(args.config)
+        config_data = loader.load()
+        print_config_summary(config_data)
+    except Exception as e:
+        print(f"[TagTracer] Error loading configuration: {e}", file=sys.stderr)
+        sys.exit(1)
 
     browser_manager = BrowserManager(headless=args.headless)
     try:
@@ -46,9 +33,7 @@ async def scan(args):
         await browser_manager.navigate(args.url)
 
         requests = browser_manager.get_captured_requests()
-        print(f"\n[TagTracer] Captured {len(requests)} network requests.")
-        for i, req in enumerate(requests):
-            print(f"  - Req {i + 1}: {req.method} {req.url}")
+        print_captured_requests(requests)
 
         if config_data:
             vendor_domains = []
@@ -66,25 +51,7 @@ async def scan(args):
             matcher = Matcher()
             validator = Validator(config_data, matcher)
             validation_summary = validator.validate(filtered_requests)
-
-            print("\n--- Validation Summary ---")
-            print(
-                f"Total Pages Scanned: {validation_summary.total_pages_scanned}"
-            )
-            print(f"Pages Passed: {validation_summary.pages_passed}")
-            print(f"Pages Failed: {validation_summary.pages_failed}")
-            for page_result in validation_summary.page_results:
-                print(
-                    f"  Page '{page_result.page_id}' ({page_result.page_url}): {page_result.overall_status}"
-                )
-                for req_result in page_result.request_results:
-                    print(
-                        f"    Request to '{req_result.request_url}' ({req_result.vendor_name}): {req_result.overall_status}"
-                    )
-                    for tag_result in req_result.tags_validated:
-                        print(
-                            f"      Tag '{tag_result.key}': {tag_result.status} - {tag_result.message}"
-                        )
+            print_validation_summary(validation_summary)
 
             # Generate reports
             reporting = Reporting(output_dir=args.output)
@@ -93,4 +60,4 @@ async def scan(args):
 
     finally:
         await browser_manager.close()
-        print("[TagTracer] Scan complete.")
+        print("\n[TagTracer] Scan complete.")

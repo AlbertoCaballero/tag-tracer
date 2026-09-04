@@ -47,6 +47,7 @@ class BrowserManager:
             headless=self.headless,
             args=[
                 "--disable-blink-features=AutomationControlled",
+                "--disable-http2",
                 "--no-sandbox",
             ]
         )

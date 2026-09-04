@@ -195,26 +195,39 @@ class Validator:
                 found_tags.update(req_res.query_params)
                 found_tags.update(req_res.body_params)
 
-            # Resolve each expected tag to its field/location and mark found/missing
+            # Resolve each expected tag to its field/location and mark found/missing.
+            # Derive from the per-request validation results (vendor-scoped and
+            # correct) instead of re-aggregating raw params across all vendors.
             expected_tag_status: List[Dict[str, Any]] = []
-            page_query, page_body, page_headers = self._page_params_by_location(
-                page_matched_requests
-            )
+            tag_results: Dict[str, List[TagValidationResult]] = {}
+            for req_res in page_matched_requests:
+                for tag_res in req_res.tags_validated:
+                    tag_results.setdefault(tag_res.key, []).append(tag_res)
+
             for tag_key, tag_value in page.expected_tags.items():
                 owning_vendor, field = self._resolve_tag_key(tag_key, page.page_vendors)
-                field_locations = self._field_locations(owning_vendor)
-                location = field_locations.get(field) or "N/A"
+                results = tag_results.get(tag_key, [])
+                passed = [r for r in results if r.status == "passed"]
 
-                actual_value, source = self._lookup_value(
-                    field, field_locations, page_query, page_body, page_headers
-                )
-                found = actual_value is not None
+                if passed:
+                    actual_value = passed[0].actual_value
+                    location = passed[0].location
+                    found = True
+                elif results:
+                    actual_value = results[0].actual_value
+                    location = results[0].location
+                    found = actual_value is not None
+                else:
+                    actual_value = None
+                    location = "N/A"
+                    found = False
+
                 expected_tag_status.append(
                     {
                         "key": tag_key,
                         "vendor": owning_vendor or "",
                         "field": field,
-                        "location": source or location,
+                        "location": location,
                         "expected_value": tag_value,
                         "actual_value": actual_value,
                         "found": found,
@@ -318,17 +331,24 @@ class Validator:
         header_params: Dict[str, Any],
     ) -> tuple:
         """
-        Returns (value, location) for a field. If the field is declared in the
-        vendor config, only the declared location is checked; otherwise all
-        sources are searched (query -> body -> header).
+        Returns (value, location) for a field. The declared location from the
+        vendor config is checked first; if the field is not found there, all
+        sources are searched (query -> body -> header) so that real beacons
+        that differ from the config declaration are still matched.
         """
-        location = field_locations.get(field)
-        if location == "query":
-            return query_params.get(field), "query"
-        if location == "body":
-            return body_params.get(field), "body"
-        if location == "header":
-            return header_params.get(field.lower()), "header"
+        declared = field_locations.get(field)
+        if declared == "query":
+            value = query_params.get(field)
+            if value is not None:
+                return value, "query"
+        elif declared == "body":
+            value = body_params.get(field)
+            if value is not None:
+                return value, "body"
+        elif declared == "header":
+            value = header_params.get(field.lower())
+            if value is not None:
+                return value, "header"
 
         for loc, params in (
             ("query", query_params),
@@ -339,20 +359,6 @@ class Validator:
             if value is not None:
                 return value, loc
         return None, None
-
-    @staticmethod
-    def _page_params_by_location(
-        page_matched_requests: List[RequestValidationResult],
-    ) -> tuple:
-        """Aggregates query, body, and header params across all page requests."""
-        query: Dict[str, Any] = {}
-        body: Dict[str, Any] = {}
-        headers: Dict[str, Any] = {}
-        for req_res in page_matched_requests:
-            query.update(req_res.query_params)
-            body.update(req_res.body_params)
-            headers.update(req_res.header_params)
-        return query, body, headers
 
     @staticmethod
     def _resolve_tag_key(key: str, page_vendors: List[str]):

@@ -1,33 +1,9 @@
-from typing import Any, Dict, List
+from typing import List
 
-def string_to_list(s):
+
+def string_to_list(s) -> List[str]:
     """
     Parses a string that represents a list, e.g., "[item1, item2]".
     """
     s = s.strip("[]")
     return [item.strip() for item in s.split(",") if item.strip()]
-
-
-def format_expected_tags(tags: Dict[str, Any] = {}) -> str:
-    """
-    Takes the expected tags and forms a readable output string.
-    """
-    formatted_lines = []
-    for tag_key, tag_value in tags.items():
-        if isinstance(tag_value, dict) and "value" in tag_value:
-            # If it's an ExpectedTag-like dictionary with a 'value'
-            formatted_lines.append(f"  - {tag_key}: {tag_value['value']}")
-        else:
-            # Otherwise, just print the value directly
-            formatted_lines.append(f"  - {tag_key}: {tag_value}")
-    return "\n".join(formatted_lines)
-
-def print_expected_tags(tags: Dict[str, Any] = {}):
-    """
-    Takes the expected tags and forms a readable output
-    """
-    indent = "\t" * 1
-    lines = []
-    for tag in tags:
-        lines.append(f"{indent}{tag}: {tags[tag]}")
-    print("\n".join(lines))
