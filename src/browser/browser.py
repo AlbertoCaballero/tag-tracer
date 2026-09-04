@@ -8,6 +8,8 @@ TODO:
 - Add logging and debugging hooks
 """
 
+import asyncio
+
 from playwright.async_api import Page, Request, async_playwright
 
 from src.models import NetworkRequest
@@ -62,14 +64,26 @@ class BrowserManager:
         self.page.on("request", self._handle_request)
         return self.page
 
-    async def navigate(self, url: str):
+    async def navigate(self, url: str, settle_time: float = 5.0):
         """
-        Navigates the page to the specified URL.
+        Navigates the page to the specified URL and waits for the page to settle.
+
+        Navigation completes at DOMContentLoaded, but analytics and marketing
+        tags frequently fire on the `load` event or on a delay. We wait for the
+        `load` event (best-effort) and then an extra `settle_time` seconds so
+        late-firing tag beacons are captured.
         """
         if not self.page:
             raise ConnectionError("Browser not launched. Call launch() first.")
         print(f"\n[Browser] Navigating to: {url}")
         await self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        try:
+            await self.page.wait_for_load_state("load", timeout=15000)
+        except Exception:
+            pass  # Page keeps loading past the load event; continue to settle
+        if settle_time > 0:
+            print(f"[Browser] Waiting {settle_time}s for tags to fire...")
+            await asyncio.sleep(settle_time)
         print("\n[Browser] Navigation complete.")
 
     def get_captured_requests(self) -> list[NetworkRequest]:

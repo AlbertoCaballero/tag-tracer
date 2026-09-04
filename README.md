@@ -99,6 +99,21 @@ and blocked by websites. Headed mode is the default because headless browsers ar
 easier for anti-bot systems to fingerprint. If stealth is not a concern, pass
 `--headless` to run without a visible window.
 
+### Capturing late-firing tags
+
+Analytics and marketing tags often fire on the `load` event or after a delay, not
+at DOMContentLoaded. TagTracer therefore waits for the page to settle before
+collecting the captured requests. The default wait is 5 seconds; adjust it with
+`--wait` (pass `--wait 0` to disable):
+
+```
+tag-tracer scan \
+--url "https://example.com" \
+--config config/tag-tracer-config.xlsx \
+--output reports \
+--wait 8
+```
+
 ---
 
 ## Roadmap

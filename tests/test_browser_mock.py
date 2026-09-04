@@ -47,7 +47,7 @@ async def test_browser_manager_navigate(mock_playwright):
     await manager.launch() # Launch first to set up page object
 
     test_url = "http://example.com"
-    await manager.navigate(test_url)
+    await manager.navigate(test_url, settle_time=0)
 
     mock_page.goto.assert_called_once_with(test_url, wait_until="domcontentloaded", timeout=60000)
 

@@ -59,6 +59,12 @@ def main():
         help="Run the browser in headless mode (default: headed with stealth to avoid bot detection).",
     )
     scan_parser.add_argument(
+        "--wait",
+        type=float,
+        default=5.0,
+        help="Seconds to wait after page load for tags to fire (default: 5).",
+    )
+    scan_parser.add_argument(
         "--report-formats",
         default="json,html",
         help="Comma-separated list of report formats to generate (json, html, excel).",

@@ -30,7 +30,7 @@ async def scan(args):
     browser_manager = BrowserManager(headless=args.headless)
     try:
         await browser_manager.launch()
-        await browser_manager.navigate(args.url)
+        await browser_manager.navigate(args.url, settle_time=args.wait)
 
         requests = browser_manager.get_captured_requests()
         print_captured_requests(requests)
