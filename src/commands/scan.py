@@ -5,6 +5,7 @@ from src.network_capture.network_capture import NetworkCapture
 from src.reporting.console_report import (
     print_captured_requests,
     print_config_summary,
+    print_final_status,
     print_header,
     print_validation_summary,
 )
@@ -28,6 +29,7 @@ async def scan(args):
         sys.exit(1)
 
     browser_manager = BrowserManager(headless=args.headless)
+    exit_code = 0
     try:
         await browser_manager.launch()
         await browser_manager.navigate(args.url, settle_time=args.wait)
@@ -52,6 +54,9 @@ async def scan(args):
             validator = Validator(config_data, matcher)
             validation_summary = validator.validate(filtered_requests)
             print_validation_summary(validation_summary)
+            print_final_status(validation_summary)
+            if validation_summary.pages_failed > 0:
+                exit_code = 1
 
             # Generate reports
             reporting = Reporting(output_dir=args.output)
@@ -61,3 +66,4 @@ async def scan(args):
     finally:
         await browser_manager.close()
         print("\n[TagTracer] Scan complete.")
+    return exit_code

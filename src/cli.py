@@ -15,6 +15,7 @@ parsing, dispatching, and presentation.
 
 import argparse
 import asyncio
+import sys
 
 from src.commands.scan import scan
 from src.commands.validate import validate
@@ -105,12 +106,12 @@ def main():
     args = parser.parse_args()
 
     if args.command == "scan":
-        asyncio.run(scan(args))
-        return
+        exit_code = asyncio.run(scan(args))
+        sys.exit(exit_code)
 
     if args.command == "validate":
-        validate(args)
-        return
+        exit_code = validate(args)
+        sys.exit(exit_code)
 
     if args.command == "version":
         version()

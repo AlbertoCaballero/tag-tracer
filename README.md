@@ -114,6 +114,17 @@ tag-tracer scan \
 --wait 8
 ```
 
+### Exit codes
+
+`tag-tracer scan` and `tag-tracer validate` exit with status `0` when every page
+passes validation and `1` when any page fails (or an error occurs). This makes
+TagTracer easy to gate on in CI/CD pipelines:
+
+```
+tag-tracer validate --input captured.json --config config.xlsx
+# $? == 0 when all pages passed, 1 when any failed
+```
+
 ---
 
 ## Roadmap

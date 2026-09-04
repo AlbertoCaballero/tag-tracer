@@ -128,6 +128,20 @@ def print_validation_summary(summary: ValidationSummary) -> None:
         _print_page(page)
 
 
+def print_final_status(summary: ValidationSummary) -> None:
+    """Prints a single PASSED/FAILED line summarizing the run."""
+    if summary.pages_failed > 0:
+        console.print(
+            f"\n[bold red]FAILED[/bold red] — {summary.pages_failed}/"
+            f"{summary.total_pages_scanned} pages failed validation."
+        )
+    else:
+        console.print(
+            f"\n[bold green]PASSED[/bold green] — all {summary.total_pages_scanned} "
+            f"pages passed validation."
+        )
+
+
 def _print_page(page) -> None:
     border = "green" if page.overall_status == "passed" else "red"
     console.print()

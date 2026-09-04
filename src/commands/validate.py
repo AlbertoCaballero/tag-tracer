@@ -4,6 +4,7 @@ from typing_extensions import List
 from src.config.loader import ExcelLoader
 from src.models import NetworkRequest
 from src.reporting.console_report import (
+    print_final_status,
     print_header,
     print_validation_summary,
 )
@@ -55,6 +56,7 @@ def validate(args):
     validator = Validator(config_data, matcher)
     validation_summary = validator.validate(captured_requests)
     print_validation_summary(validation_summary)
+    print_final_status(validation_summary)
 
     # Generate reports
     reporting = Reporting(output_dir=args.output)
@@ -62,3 +64,4 @@ def validate(args):
     reporting.generate_reports(validation_summary, report_formats)
 
     print("\n[TagTracer] Validation complete.")
+    return 1 if validation_summary.pages_failed > 0 else 0

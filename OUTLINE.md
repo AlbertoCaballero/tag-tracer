@@ -220,6 +220,7 @@ scan, not just the validated tags. Implemented.
 * [x] Implement CLI with argparse (subcommands: scan, validate, version)
 * [x] Provide flags (url, config, output, report-formats, headless, wait)
 * [x] Integrate modules together
+* [x] Non-zero exit codes on validation failure (CI/CD gating)
 
 ### **Phase 7 — Testing**
 
@@ -260,5 +261,4 @@ workflow.
 * Scheduled runs with alerts
 * YAML configuration support
 * User-interaction simulation (clicks / scrolls) to trigger late-firing tags
-* Non-zero exit codes for CI/CD gating
 * Hostname-based domain matching (avoid substring false positives)
