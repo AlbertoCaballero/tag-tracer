@@ -10,6 +10,8 @@ authors = [
     { name = "Alberto Caballero", email = "albertoCaballero80@outlook.com" }
 ]
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.9"
 dependencies = [
     "playwright>=1.45.0",

@@ -233,6 +233,7 @@ scan, not just the validated tags. Implemented.
 
 * [x] Add documentation (README + OUTLINE)
 * [x] Add versioning (0.1.0, single-source via `importlib.metadata` with pyproject fallback)
+* [x] Add LICENSE (MIT)
 * [ ] Package for PyPI (optional)
 
 ### **Current Status**
