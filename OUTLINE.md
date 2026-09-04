@@ -232,7 +232,7 @@ scan, not just the validated tags. Implemented.
 ### **Phase 8 — Polish & Release**
 
 * [x] Add documentation (README + OUTLINE)
-* [x] Add versioning (0.1.0)
+* [x] Add versioning (0.1.0, single-source via `importlib.metadata` with pyproject fallback)
 * [ ] Package for PyPI (optional)
 
 ### **Current Status**

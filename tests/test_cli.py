@@ -1,12 +1,15 @@
 import json
 import os
+import re
 import sys
 from types import SimpleNamespace
 
 import pytest
 
+from src import commands
 from src.cli import main
 from src.commands.validate import validate
+from src.commands.version import get_version
 
 CONFIG = os.path.join(os.path.dirname(__file__), "..", "assets", "sample-config.xlsx")
 
@@ -90,3 +93,33 @@ def test_cli_exit_code_passed(tmp_path, monkeypatch):
     with pytest.raises(SystemExit) as exc_info:
         main()
     assert exc_info.value.code == 0
+
+
+def test_version_matches_metadata():
+    assert re.fullmatch(r"\d+\.\d+\.\d+", get_version())
+
+
+def test_version_matches_pyproject():
+    pyproject = os.path.join(os.path.dirname(__file__), "..", "pyproject.toml")
+    with open(pyproject) as f:
+        content = f.read()
+    declared = re.search(r'^version\s*=\s*"([^"]+)"', content, re.M).group(1)
+    assert get_version() == declared
+
+
+def test_version_fallback_to_pyproject(monkeypatch):
+    """When the package metadata is unavailable, fall back to pyproject.toml."""
+    version_module = commands.version
+
+    def raise_not_found(pkg):
+        raise version_module.metadata.PackageNotFoundError(pkg)
+
+    monkeypatch.setattr(version_module.metadata, "version", raise_not_found)
+    assert get_version() == "0.1.0"
+
+
+def test_cli_version_output(monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["tag-tracer", "version"])
+    main()
+    out = capsys.readouterr().out
+    assert re.search(r"version \d+\.\d+\.\d+", out)
