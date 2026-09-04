@@ -5,10 +5,10 @@ and exporting findings to various formats (e.g., JSON, HTML, Excel).
 
 from typing import List
 
-from src.reporting.excel_report import generate_excel_report
-from src.reporting.html_report import generate_html_report
-from src.reporting.json_report import generate_json_report
-from src.validation.validation import ValidationSummary
+from tag_tracer.reporting.excel_report import generate_excel_report
+from tag_tracer.reporting.html_report import generate_html_report
+from tag_tracer.reporting.json_report import generate_json_report
+from tag_tracer.validation.validation import ValidationSummary
 
 
 class Reporting:

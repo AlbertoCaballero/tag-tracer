@@ -8,11 +8,11 @@ from urllib.parse import parse_qs, urlparse
 
 from pydantic import BaseModel
 
-from src.config.loader import ExcelConfig, PageConfig
-from src.models import NetworkRequest
-from src.utils.utils import url_matches_domain
-from src.validation.matcher import Matcher
-from src.validation.rules import ExpectedTag, ValidationRule
+from tag_tracer.config.loader import ExcelConfig, PageConfig
+from tag_tracer.models import NetworkRequest
+from tag_tracer.utils.utils import url_matches_domain
+from tag_tracer.validation.matcher import Matcher
+from tag_tracer.validation.rules import ExpectedTag, ValidationRule
 
 
 class TagValidationResult(BaseModel):

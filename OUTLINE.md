@@ -35,41 +35,42 @@ tag-tracer/
 │   └── tagtracer_logo.png
 │
 ├── src/
-│   ├── __init__.py
-│   ├── cli.py                  # CLI entry point (argparse)
-│   ├── models.py               # Pydantic data models (NetworkRequest)
-│   │
-│   ├── browser/
-│   │   └── browser.py          # Playwright launcher + network capture
-│   │
-│   ├── commands/
-│   │   ├── scan.py             # scan command
-│   │   ├── validate.py         # validate command
-│   │   └── version.py          # version command
-│   │
-│   ├── config/
-│   │   └── loader.py           # Configuration loader from Excel to Pydantic models
-│   │
-│   ├── network_capture/
-│   │   └── network_capture.py  # Request filtering + JSON persistence
-│   │
-│   ├── reporting/
-│   │   ├── reporting.py        # Report format router
-│   │   ├── console_report.py   # Rich console report
-│   │   ├── html_report.py      # HTML report generator (Jinja2)
-│   │   ├── json_report.py      # JSON report generator
-│   │   ├── excel_report.py     # Excel report generator
-│   │   └── templates/
-│   │       └── report_template.html
-│   │
-│   ├── validation/
-│   │   ├── validation.py       # Validation engine + result models
-│   │   ├── rules.py            # Validation rule models
-│   │   └── matcher.py          # Rule matcher (exact, regex, contains, present)
-│   │
-│   └── utils/
-│       ├── utils.py            # Shared helpers
-│       └── inspect_excel.py    # Excel inspection script
+│   └── tag_tracer/
+│       ├── __init__.py
+│       ├── cli.py              # CLI entry point (argparse)
+│       ├── models.py           # Pydantic data models (NetworkRequest)
+│       │
+│       ├── browser/
+│       │   └── browser.py      # Playwright launcher + network capture
+│       │
+│       ├── commands/
+│       │   ├── scan.py         # scan command
+│       │   ├── validate.py     # validate command
+│       │   └── version.py      # version command
+│       │
+│       ├── config/
+│       │   └── loader.py       # Configuration loader from Excel to Pydantic models
+│       │
+│       ├── network_capture/
+│       │   └── network_capture.py  # Request filtering + JSON persistence
+│       │
+│       ├── reporting/
+│       │   ├── reporting.py        # Report format router
+│       │   ├── console_report.py   # Rich console report
+│       │   ├── html_report.py      # HTML report generator (Jinja2)
+│       │   ├── json_report.py      # JSON report generator
+│       │   ├── excel_report.py     # Excel report generator
+│       │   └── templates/
+│       │       └── report_template.html
+│       │
+│       ├── utils/
+│       │   ├── utils.py        # Shared helpers
+│       │   └── inspect_excel.py # Excel inspection script
+│       │
+│       └── validation/
+│           ├── validation.py   # Validation engine + result models
+│           ├── rules.py        # Validation rule models
+│           └── matcher.py      # Rule matcher (exact, regex, contains, present)
 │
 └── tests/
     ├── test_config_loader.py
@@ -249,7 +250,7 @@ workflow.
 
 * **Project name:** TagTracer
 * **CLI command:** `tag-tracer`
-* **Package folder:** `src` (flat layout)
+* **Package folder:** `src/tag_tracer` (src layout; import name `tag_tracer`)
 * **Config file template:** `tag-tracer-config.xlsx`
 
 ---

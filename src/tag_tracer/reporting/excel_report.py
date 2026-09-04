@@ -4,7 +4,7 @@ from typing import List
 
 import pandas as pd
 
-from src.validation.validation import (
+from tag_tracer.validation.validation import (
     PageValidationResult,
     RequestValidationResult,
     TagValidationResult,

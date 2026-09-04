@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from src.browser.browser import BrowserManager
-from src.models import NetworkRequest
+from tag_tracer.browser.browser import BrowserManager
+from tag_tracer.models import NetworkRequest
 
 @pytest.fixture
 def mock_playwright(mocker):
@@ -20,7 +20,7 @@ def mock_playwright(mocker):
     mock_browser.new_page.return_value = mock_page
 
     # Patch the `async_playwright` function directly to return our configured mock_playwright_context
-    mocker.patch("src.browser.browser.async_playwright", return_value=mock_playwright_context)
+    mocker.patch("tag_tracer.browser.browser.async_playwright", return_value=mock_playwright_context)
     
     # We also need to mock the `start` method of the `mock_playwright_context`
     # because `BrowserManager.launch` awaits `async_playwright().start()`

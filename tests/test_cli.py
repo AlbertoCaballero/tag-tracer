@@ -6,10 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from src import commands
-from src.cli import main
-from src.commands.validate import validate
-from src.commands.version import get_version
+from tag_tracer import commands
+from tag_tracer.cli import main
+from tag_tracer.commands.validate import validate
+from tag_tracer.commands.version import get_version
 
 CONFIG = os.path.join(os.path.dirname(__file__), "..", "assets", "sample-config.xlsx")
 

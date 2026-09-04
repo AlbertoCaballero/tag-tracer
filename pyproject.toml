@@ -24,11 +24,10 @@ dependencies = [
 ]
 
 [project.scripts]
-tag-tracer = "src.cli:main"
+tag-tracer = "tag_tracer.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
+where = ["src"]
 
 [tool.setuptools.package-data]
-"src.reporting" = ["templates/*.html"]
+"tag_tracer.reporting" = ["templates/*.html"]

@@ -6,8 +6,8 @@ Handles filtering and persistence of network requests.
 import json
 from typing import List
 
-from src.models import NetworkRequest
-from src.utils.utils import url_matches_domain
+from tag_tracer.models import NetworkRequest
+from tag_tracer.utils.utils import url_matches_domain
 
 
 class NetworkCapture:

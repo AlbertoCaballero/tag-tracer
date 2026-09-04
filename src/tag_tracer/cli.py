@@ -17,9 +17,9 @@ import argparse
 import asyncio
 import sys
 
-from src.commands.scan import scan
-from src.commands.validate import validate
-from src.commands.version import version
+from tag_tracer.commands.scan import scan
+from tag_tracer.commands.validate import validate
+from tag_tracer.commands.version import version
 
 
 def main():

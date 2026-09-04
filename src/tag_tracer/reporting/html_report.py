@@ -3,7 +3,7 @@ from datetime import datetime
 
 from jinja2 import Environment, FileSystemLoader
 
-from src.validation.validation import ValidationSummary
+from tag_tracer.validation.validation import ValidationSummary
 
 
 def generate_html_report(summary: ValidationSummary, output_dir: str, filename: str = None):

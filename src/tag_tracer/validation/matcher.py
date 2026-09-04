@@ -1,7 +1,7 @@
 import re
 from typing import Any, Union
 
-from src.validation.rules import ValidationRule
+from tag_tracer.validation.rules import ValidationRule
 
 
 class Matcher:

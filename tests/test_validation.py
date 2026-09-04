@@ -1,15 +1,15 @@
 import pytest
-from src.validation.validation import (
+from tag_tracer.validation.validation import (
     Validator,
     ValidationSummary,
     PageValidationResult,
     RequestValidationResult,
     TagValidationResult,
 )
-from src.validation.matcher import Matcher
-from src.validation.rules import ExpectedTag, ValidationRule
-from src.models import NetworkRequest
-from src.config.loader import ExcelConfig, VendorConfig, PageConfig
+from tag_tracer.validation.matcher import Matcher
+from tag_tracer.validation.rules import ExpectedTag, ValidationRule
+from tag_tracer.models import NetworkRequest
+from tag_tracer.config.loader import ExcelConfig, VendorConfig, PageConfig
 
 @pytest.fixture
 def sample_matcher():

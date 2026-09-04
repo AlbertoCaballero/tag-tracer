@@ -36,7 +36,7 @@ def get_version() -> str:
     try:
         return metadata.version(PACKAGE_NAME)
     except metadata.PackageNotFoundError:
-        pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        pyproject = Path(__file__).resolve().parents[3] / "pyproject.toml"
         match = re.search(
             r'^version\s*=\s*["\']([^"\']+)["\']', pyproject.read_text(), re.M
         )

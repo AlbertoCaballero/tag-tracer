@@ -13,9 +13,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from src.config.loader import ExcelConfig
-from src.models import NetworkRequest
-from src.validation.validation import ValidationSummary
+from tag_tracer.config.loader import ExcelConfig
+from tag_tracer.models import NetworkRequest
+from tag_tracer.validation.validation import ValidationSummary
 
 console = Console()
 

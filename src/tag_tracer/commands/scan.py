@@ -1,17 +1,17 @@
 import sys
-from src.browser.browser import BrowserManager
-from src.config.loader import ExcelLoader
-from src.network_capture.network_capture import NetworkCapture
-from src.reporting.console_report import (
+from tag_tracer.browser.browser import BrowserManager
+from tag_tracer.config.loader import ExcelLoader
+from tag_tracer.network_capture.network_capture import NetworkCapture
+from tag_tracer.reporting.console_report import (
     print_captured_requests,
     print_config_summary,
     print_final_status,
     print_header,
     print_validation_summary,
 )
-from src.reporting.reporting import Reporting
-from src.validation.matcher import Matcher
-from src.validation.validation import Validator
+from tag_tracer.reporting.reporting import Reporting
+from tag_tracer.validation.matcher import Matcher
+from tag_tracer.validation.validation import Validator
 
 
 async def scan(args):

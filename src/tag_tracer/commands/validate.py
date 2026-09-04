@@ -1,16 +1,16 @@
 import json
 import sys
 from typing_extensions import List
-from src.config.loader import ExcelLoader
-from src.models import NetworkRequest
-from src.reporting.console_report import (
+from tag_tracer.config.loader import ExcelLoader
+from tag_tracer.models import NetworkRequest
+from tag_tracer.reporting.console_report import (
     print_final_status,
     print_header,
     print_validation_summary,
 )
-from src.reporting.reporting import Reporting
-from src.validation.matcher import Matcher
-from src.validation.validation import Validator
+from tag_tracer.reporting.reporting import Reporting
+from tag_tracer.validation.matcher import Matcher
+from tag_tracer.validation.validation import Validator
 
 
 def validate(args):

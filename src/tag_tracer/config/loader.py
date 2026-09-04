@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 import pandas as pd
 from pydantic import BaseModel
 
-from src.utils.utils import string_to_list
+from tag_tracer.utils.utils import string_to_list
 
 
 def _parse_string_list(value: str) -> List[str]:

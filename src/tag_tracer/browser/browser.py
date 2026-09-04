@@ -12,7 +12,7 @@ import asyncio
 
 from playwright.async_api import Page, Request, async_playwright
 
-from src.models import NetworkRequest
+from tag_tracer.models import NetworkRequest
 
 
 class BrowserManager:

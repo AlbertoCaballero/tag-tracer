@@ -1,7 +1,10 @@
 import pandas as pd
+from pathlib import Path
+
+SAMPLE_CONFIG = Path(__file__).resolve().parents[3] / "assets" / "sample-config.xlsx"
 
 try:
-    xls = pd.ExcelFile('assets/sample-config.xlsx')
+    xls = pd.ExcelFile(SAMPLE_CONFIG)
     print("Sheet names:", xls.sheet_names)
     for sheet_name in xls.sheet_names:
         print(f"\n--- {sheet_name} ---")

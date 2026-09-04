@@ -1,8 +1,8 @@
 import pytest
 
-from src.models import NetworkRequest
-from src.network_capture.network_capture import NetworkCapture
-from src.utils.utils import url_matches_domain
+from tag_tracer.models import NetworkRequest
+from tag_tracer.network_capture.network_capture import NetworkCapture
+from tag_tracer.utils.utils import url_matches_domain
 
 
 def _req(url):

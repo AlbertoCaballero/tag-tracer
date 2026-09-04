@@ -1,7 +1,7 @@
 import os
 import pytest
 import pandas as pd # Added import
-from src.config.loader import ExcelLoader, ExcelConfig, VendorConfig, PageConfig
+from tag_tracer.config.loader import ExcelLoader, ExcelConfig, VendorConfig, PageConfig
 
 # Define a temporary Excel file for testing
 @pytest.fixture
@@ -66,19 +66,19 @@ def test_excel_loader_load_method(mock_excel_loader):
     assert config.pages[0].expected_tags == {"expected_param_1": "value_1"}
 
 def test_parse_string_list_utility():
-    from src.config.loader import _parse_string_list
+    from tag_tracer.config.loader import _parse_string_list
     assert _parse_string_list("[item1, item2]") == ["item1", "item2"]
     assert _parse_string_list("item1") == ["item1"]
     assert _parse_string_list("[]") == []
     assert _parse_string_list("[ item1 , item2 ]") == ["item1", "item2"]
     assert _parse_string_list("") == [""] # Should be handled by string_to_list or other validation
 
-# It is important to also mock the `string_to_list` in src.config.loader
-# as it's imported from src.utils.utils but used in src.config.loader.
+# It is important to also mock the `string_to_list` in tag_tracer.config.loader
+# as it's imported from tag_tracer.utils.utils but used in tag_tracer.config.loader.
 # If we were to run this test standalone, it would try to import
-# `string_to_list` from the actual `src.utils.utils` module.
+# `string_to_list` from the actual `tag_tracer.utils.utils` module.
 def test_string_to_list_mocked(mocker, mock_excel_loader):
-    mocker.patch("src.utils.utils.string_to_list", side_effect=lambda x: [x.strip("[]")])
+    mocker.patch("tag_tracer.utils.utils.string_to_list", side_effect=lambda x: [x.strip("[]")])
     # Re-instantiate or reload the module if necessary to pick up the mock
     # For now, relying on mock_excel_loader's setup
     config = mock_excel_loader.load()

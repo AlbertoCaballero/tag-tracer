@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 
-from src.validation.validation import ValidationSummary
+from tag_tracer.validation.validation import ValidationSummary
 
 
 def generate_json_report(summary: ValidationSummary, output_dir: str, filename: str = None):
