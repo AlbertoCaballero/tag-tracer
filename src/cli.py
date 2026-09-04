@@ -54,6 +54,11 @@ def main():
         help="Directory to save captured network requests and reports.",
     )
     scan_parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run the browser in headless mode (default: headed with stealth to avoid bot detection).",
+    )
+    scan_parser.add_argument(
         "--report-formats",
         default="json,html",
         help="Comma-separated list of report formats to generate (json, html, excel).",

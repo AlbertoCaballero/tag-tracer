@@ -104,20 +104,26 @@ class Validator:
 
                 all_params = {**query_params, **body_params}
 
-                # Validate expected tags for this page
+                # Validate expected tags for this page, scoped to the request's vendor
                 for expected_tag_key, expected_tag_value in page.expected_tags.items():
+                    owning_vendor, param_name = self._resolve_tag_key(
+                        expected_tag_key, page.page_vendors
+                    )
+                    # Skip tags that belong to a different vendor
+                    if owning_vendor and owning_vendor != vendor_name:
+                        continue
+
                     # The value from page.expected_tags can be a primitive or a dictionary
                     # We need to construct an ExpectedTag instance from it
-                    
                     if isinstance(expected_tag_value, dict):
                         # If it's already a dict, assume it contains explicit rules/value
                         tag_data = expected_tag_value
                     else:
                         # If it's a primitive, assume it implies an exact match
                         tag_data = {"value": expected_tag_value}
-                    
-                    # Always provide the key explicitly
-                    expected_tag = ExpectedTag(key=expected_tag_key, **tag_data)
+
+                    # The ExpectedTag key is the actual parameter name used for lookup
+                    expected_tag = ExpectedTag(key=param_name, **tag_data)
     
                     actual_value = all_params.get(expected_tag.key)
                     tag_status = "failed"
@@ -137,7 +143,7 @@ class Validator:
 
                     tags_validated.append(
                         TagValidationResult(
-                            key=expected_tag.key,
+                            key=expected_tag_key,
                             expected_value=rule.value if rule_passed and rule.value is not None else expected_tag.value,
                             actual_value=actual_value,
                             rule_type=rule.type if rule_passed else "N/A",
@@ -157,9 +163,16 @@ class Validator:
                     )
                 )
 
-            # Determine page overall status
-            if all(
-                req_res.overall_status == "passed" for req_res in page_matched_requests
+            # Determine page overall status: every expected tag must have
+            # passed on at least one request (missing tags => fail).
+            passed_tag_keys = {
+                tag_res.key
+                for req_res in page_matched_requests
+                for tag_res in req_res.tags_validated
+                if tag_res.status == "passed"
+            }
+            if page_matched_requests and all(
+                tag_key in passed_tag_keys for tag_key in page.expected_tags.keys()
             ):
                 page_overall_status = "passed"
                 pages_passed += 1
@@ -185,6 +198,21 @@ class Validator:
             f"\n[Validator] Validation complete. Pages passed: {pages_passed}/{total_pages_scanned}"
         )
         return summary
+
+    @staticmethod
+    def _resolve_tag_key(key: str, page_vendors: List[str]):
+        """
+        Resolves an expected tag key into (owning_vendor, parameter_name).
+
+        Keys may be prefixed with a vendor name (e.g. 'meta-ev' for vendor
+        'meta' and parameter 'ev') to scope a tag to a specific vendor.
+        Unprefixed keys are treated as global and apply to every request.
+        """
+        for vendor in page_vendors:
+            prefix = f"{vendor}-"
+            if key.startswith(prefix):
+                return vendor, key[len(prefix):]
+        return None, key
 
     def _get_relevant_requests(
         self, captured_requests: List[NetworkRequest], page_vendors: List[str]

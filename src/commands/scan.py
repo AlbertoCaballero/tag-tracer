@@ -40,7 +40,7 @@ async def scan(args):
             )
             sys.exit(1)
 
-    browser_manager = BrowserManager(headless=True)
+    browser_manager = BrowserManager(headless=args.headless)
     try:
         await browser_manager.launch()
         await browser_manager.navigate(args.url)

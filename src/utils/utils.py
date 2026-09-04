@@ -26,8 +26,8 @@ def print_expected_tags(tags: Dict[str, Any] = {}):
     """
     Takes the expected tags and forms a readable output
     """
-    format = ""
+    indent = "\t" * 1
+    lines = []
     for tag in tags:
-        print(f"{'\t' * 1}{tag}: {tags[tag]}")
-        format.join(f"\n{'\t' * 1}{tag}: {tags[tag]}")
-    return format
+        lines.append(f"{indent}{tag}: {tags[tag]}")
+    print("\n".join(lines))

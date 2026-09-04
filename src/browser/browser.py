@@ -34,18 +34,17 @@ class BrowserManager:
 
     async def launch(self) -> Page:
         """
-        Launches a headless browser instance and returns a new page object.
+        Launches a browser instance and returns a new page object.
+
+        Headed mode is the default: it uses stealth configuration to reduce
+        the chance of bot detection and blocking. Pass headless=True to run
+        without a visible window.
         """
         self.p = await async_playwright().start()
 
-        # Base configuration
-        # self.browser = await self.p.chromium.launch(
-        #     headless=self.headless, args=["--disable-http2"]
-        # )
-
-        # Stealth configuration
+        # Stealth configuration to reduce bot detection
         self.browser = await self.p.chromium.launch(
-            headless=False,  # Try headed mode first
+            headless=self.headless,
             args=[
                 "--disable-blink-features=AutomationControlled",
                 "--no-sandbox",

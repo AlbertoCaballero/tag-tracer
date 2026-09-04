@@ -8,7 +8,7 @@
 
 </div>
 
-A lightweight, automated tool designed to validate marketing, analytics, and tracking tags using a headless browser, with configuration-driven rules powered by Excel.
+A lightweight, automated tool designed to validate marketing, analytics, and tracking tags using an automated browser, with configuration-driven rules powered by Excel.
 
 ---
 
@@ -28,7 +28,7 @@ TagTracer is particularly useful for:
 
 ## Key Features
 
-* **Headless browser scanning** using Playwright.
+* **Real-browser scanning** using Playwright, with stealth configuration to avoid bot detection.
 * **Network interception** for all requests.
 * **Excel-driven configuration** for domains, rules, and expected values.
 * **Flexible validation engine** supporting exact, partial, and regex matching.
@@ -89,6 +89,15 @@ tag-tracer scan \
 --config config/tag-tracer-config.xlsx \
 --output reports
 ```
+
+### Stealth & bot detection
+
+By default TagTracer launches a **headed** (visible) Chromium browser with stealth
+tweaks — `--disable-blink-features=AutomationControlled`, `navigator.webdriver`
+masking, and a realistic user agent — so that scans are less likely to be detected
+and blocked by websites. Headed mode is the default because headless browsers are
+easier for anti-bot systems to fingerprint. If stealth is not a concern, pass
+`--headless` to run without a visible window.
 
 ---
 

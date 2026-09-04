@@ -193,3 +193,108 @@ def test_validate_home_page_some_failed(sample_excel_config, sample_matcher):
     user_id_tag = next(t for t in req2_results if t.key == "user_id")
     assert user_id_tag.status == "failed"
     assert user_id_tag.actual_value is None
+
+
+def test_validate_page_no_matching_requests_fails(sample_excel_config, sample_matcher):
+    """A page with no relevant requests must NOT pass (missing tags != pass)."""
+    validator = Validator(sample_excel_config, sample_matcher)
+
+    # Only irrelevant requests, so no page has any matched request
+    summary = validator.validate(
+        [NetworkRequest(url="http://unrelated.com/data", method="GET", headers={}, post_data=None)]
+    )
+
+    assert summary.pages_passed == 0
+    assert summary.pages_failed == 2
+    assert all(p.overall_status == "failed" for p in summary.page_results)
+
+
+@pytest.fixture
+def multi_vendor_config():
+    return ExcelConfig(
+        vendors={
+            "meta": VendorConfig(domains=["www.facebook.com"]),
+            "google": VendorConfig(domains=["www.googletagmanager.com"]),
+            "floodlight": VendorConfig(domains=["fls.doubleclick.net"]),
+        },
+        pages=[
+            PageConfig(
+                id="auto",
+                target_url="https://www.usaa.com/auto",
+                page_vendors=["meta", "google", "floodlight"],
+                expected_tags={
+                    # Vendor-prefixed keys are scoped to that vendor's requests
+                    "meta-ev": "ViewContent",
+                    "google-ad": "something",
+                    "floodlight-flo": "aefl",
+                },
+            ),
+        ],
+    )
+
+
+def test_validate_vendor_scoped_tags(multi_vendor_config, sample_matcher):
+    """Each request should only validate tags belonging to its own vendor."""
+    validator = Validator(multi_vendor_config, sample_matcher)
+    requests = [
+        NetworkRequest(
+            url="https://www.facebook.com/tr/?ev=ViewContent&cd=aut-ins",
+            method="GET",
+            headers={},
+            post_data=None,
+        ),
+        NetworkRequest(
+            url="https://www.googletagmanager.com/gtag/js?ad=something",
+            method="GET",
+            headers={},
+            post_data=None,
+        ),
+        NetworkRequest(
+            url="https://fls.doubleclick.net/activityi?src=1",
+            method="POST",
+            headers={},
+            post_data="flo=aefl",
+        ),
+    ]
+
+    summary = validator.validate(requests)
+
+    page = summary.page_results[0]
+    assert page.overall_status == "passed"
+    assert page.matched_requests_count == 3
+
+    # Each request validates only its own vendor's tag
+    by_url = {r.request_url: r for r in page.request_results}
+    meta_req = by_url["https://www.facebook.com/tr/?ev=ViewContent&cd=aut-ins"]
+    assert [t.key for t in meta_req.tags_validated] == ["meta-ev"]
+    assert meta_req.tags_validated[0].actual_value == "ViewContent"
+    assert meta_req.tags_validated[0].status == "passed"
+
+    google_req = by_url["https://www.googletagmanager.com/gtag/js?ad=something"]
+    assert [t.key for t in google_req.tags_validated] == ["google-ad"]
+    assert google_req.tags_validated[0].status == "passed"
+
+    floodlight_req = by_url["https://fls.doubleclick.net/activityi?src=1"]
+    assert [t.key for t in floodlight_req.tags_validated] == ["floodlight-flo"]
+    assert floodlight_req.tags_validated[0].actual_value == "aefl"
+    assert floodlight_req.tags_validated[0].status == "passed"
+
+
+def test_validate_vendor_scoped_tags_missing_vendor(multi_vendor_config, sample_matcher):
+    """If a vendor's tag never fires, the page must fail."""
+    validator = Validator(multi_vendor_config, sample_matcher)
+    requests = [
+        NetworkRequest(
+            url="https://www.facebook.com/tr/?ev=ViewContent&cd=aut-ins",
+            method="GET",
+            headers={},
+            post_data=None,
+        ),
+        # google and floodlight requests never fire
+    ]
+
+    summary = validator.validate(requests)
+
+    page = summary.page_results[0]
+    assert page.overall_status == "failed"
+    assert page.matched_requests_count == 1
