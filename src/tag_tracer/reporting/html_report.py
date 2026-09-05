@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime
 
@@ -5,8 +6,12 @@ from jinja2 import Environment, FileSystemLoader
 
 from tag_tracer.validation.validation import ValidationSummary
 
+logger = logging.getLogger(__name__)
 
-def generate_html_report(summary: ValidationSummary, output_dir: str, filename: str = None):
+
+def generate_html_report(
+    summary: ValidationSummary, output_dir: str, filename: str = None
+):
     """
     Generates an HTML report from the validation summary using Jinja2.
     """
@@ -19,9 +24,7 @@ def generate_html_report(summary: ValidationSummary, output_dir: str, filename: 
     file_path = os.path.join(output_dir, filename)
 
     template_dir = os.path.join(os.path.dirname(__file__), "templates")
-    env = Environment(
-        loader=FileSystemLoader(template_dir), autoescape=True
-    )
+    env = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
     template = env.get_template("report_template.html")
 
     html_output = template.render(
@@ -32,4 +35,4 @@ def generate_html_report(summary: ValidationSummary, output_dir: str, filename: 
     with open(file_path, "w") as f:
         f.write(html_output)
 
-    print(f"[Reporting] HTML report generated at: {file_path}")
+    logger.info("HTML report generated at: %s", file_path)

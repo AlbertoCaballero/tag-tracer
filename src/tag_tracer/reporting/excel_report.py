@@ -1,18 +1,20 @@
+import logging
 import os
 from datetime import datetime
-from typing import List
+from typing import Any
 
 import pandas as pd
 
 from tag_tracer.validation.validation import (
-    PageValidationResult,
-    RequestValidationResult,
-    TagValidationResult,
     ValidationSummary,
 )
 
+logger = logging.getLogger(__name__)
 
-def generate_excel_report(summary: ValidationSummary, output_dir: str, filename: str = None):
+
+def generate_excel_report(
+    summary: ValidationSummary, output_dir: str, filename: str = None
+):
     """
     Generates an Excel report from the validation summary.
     """
@@ -39,7 +41,7 @@ def generate_excel_report(summary: ValidationSummary, output_dir: str, filename:
     summary_df.to_excel(writer, sheet_name="Summary", index=False)
 
     # Detailed Results Sheet
-    all_results: List[Dict[str, Any]] = []
+    all_results: list[dict[str, Any]] = []
 
     for page in summary.page_results:
         for request in page.request_results:
@@ -90,6 +92,5 @@ def generate_excel_report(summary: ValidationSummary, output_dir: str, filename:
         )
         empty_df.to_excel(writer, sheet_name="Detailed Results", index=False)
 
-
     writer.close()
-    print(f"[Reporting] Excel report generated at: {file_path}")
+    logger.info("Excel report generated at: %s", file_path)

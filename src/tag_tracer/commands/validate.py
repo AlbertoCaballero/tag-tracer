@@ -1,6 +1,6 @@
 import json
 import sys
-from typing_extensions import List
+
 from tag_tracer.config.loader import ExcelLoader
 from tag_tracer.models import NetworkRequest
 from tag_tracer.reporting.console_report import (
@@ -29,9 +29,9 @@ def validate(args):
         sys.exit(1)
 
     # Load captured requests
-    captured_requests: List[NetworkRequest] = []
+    captured_requests: list[NetworkRequest] = []
     try:
-        with open(args.input, "r") as f:
+        with open(args.input) as f:
             raw_requests = json.load(f)
         captured_requests = [NetworkRequest(**req) for req in raw_requests]
         print(f"[TagTracer] Loaded {len(captured_requests)} requests.")
