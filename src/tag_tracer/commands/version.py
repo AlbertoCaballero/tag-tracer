@@ -1,6 +1,6 @@
+import re
 from importlib import metadata
 from pathlib import Path
-import re
 
 PACKAGE_NAME = "tag-tracer"
 

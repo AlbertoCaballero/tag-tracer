@@ -1,5 +1,6 @@
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 
 SAMPLE_CONFIG = Path(__file__).resolve().parents[3] / "assets" / "sample-config.xlsx"
 

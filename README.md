@@ -84,9 +84,11 @@ cd tag-tracer
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .
 python -m playwright install chromium
 ```
+
+`requirements.txt` installs the package and its runtime + dev dependencies from
+`pyproject.toml` (the single source of truth).
 
 Verify the install:
 

@@ -228,7 +228,23 @@ scan, not just the validated tags. Implemented.
 * [x] Unit tests: config loader
 * [x] Unit tests: validator
 * [x] Browser tests with mock URLs
-* [ ] Add CI workflow (optional)
+* [x] Add CI workflow (pytest + ruff on 3.10/3.11/3.12)
+
+### **Phase 7.1 — Code Refactor & Best Practice Fixes**
+
+* [x] Fix stealth browser context — open the page from the configured context, not `browser.new_page()`
+* [x] Fix `--url` default (currently `"all"` navigates to a literal `all` URL)
+* [x] Fix `NameError` in validator when `expected_tag.rules` is empty (`rule` referenced outside loop)
+* [x] Fix `scan` exit codes — return non-zero cleanly on browser/navigation exceptions
+* [x] Remove stale leftover directories (`src/browser/`, `src/commands/`, `src/config/`, `src/models/`, `src/reporting/`, `src/utils/`, `src/validation/`)
+* [x] Replace core-logic `print()` calls with stdlib `logging`
+* [x] Consolidate duplicate list-parsing helpers (`_parse_string_list` vs `string_to_list`); clean stray comments
+* [x] Migrate pydantic v1 `.dict()` usage to `.model_dump()`
+* [x] Normalize typing style (builtin generics, drop `typing_extensions`)
+* [x] Align `requires-python` (pyproject says 3.9, README says 3.10+) and single-source dependencies
+* [x] Declare dev/test dependencies (pytest, pytest-asyncio, pytest-mock) in `pyproject.toml`
+* [x] Add lint/format config (ruff) and CI workflow
+* [x] Clean up unused test scaffolding and edge-case assertions in `tests/test_config_loader.py`
 
 ### **Phase 8 — Polish & Release**
 
@@ -239,10 +255,10 @@ scan, not just the validated tags. Implemented.
 
 ### **Current Status**
 
-Phases 1–6 are complete. Phase 7 is essentially complete (only the optional CI
-workflow remains). The project is in **Phase 8 — Polish & Release**: remaining
-work is packaging for PyPI, single-source versioning, a LICENSE file, and a CI
-workflow.
+Phases 1–6 are complete. Phase 7 is complete, including a CI workflow. Phase 7.1
+(code refactor and best-practice fixes from the maintainability review) is also
+complete. The project is in **Phase 8 — Polish & Release**: remaining work is
+packaging for PyPI and a LICENSE file.
 
 ---
 

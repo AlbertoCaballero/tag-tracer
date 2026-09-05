@@ -1,14 +1,15 @@
-from typing import Dict, Literal, Union
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 
 class ValidationRule(BaseModel):
     """Base model for all validation rules."""
+
     type: Literal["exact", "regex", "contains", "present"] = Field(
         ..., description="The type of validation to perform."
     )
-    value: Union[str, int, float, bool, None] = Field(
+    value: str | int | float | bool | None = Field(
         None,
         description="The expected value for comparison. Not used for 'present' type.",
     )
@@ -25,10 +26,10 @@ class ExpectedTag(BaseModel):
     """
 
     key: str = Field(..., description="The key of the expected tag parameter.")
-    value: Union[str, int, float, bool, None] = Field(
+    value: str | int | float | bool | None = Field(
         None, description="The expected value for the tag parameter."
     )
-    rules: Dict[str, ValidationRule] = Field(
+    rules: dict[str, ValidationRule] = Field(
         default_factory=dict,
         description="Dictionary of validation rules for this tag. Key is rule name.",
     )
@@ -38,4 +39,3 @@ class ExpectedTag(BaseModel):
         super().__init__(**data)
         if not self.rules and self.value is not None:
             self.rules["default"] = ValidationRule(type="exact", value=self.value)
-

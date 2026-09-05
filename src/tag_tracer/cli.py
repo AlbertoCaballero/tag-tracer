@@ -15,6 +15,7 @@ parsing, dispatching, and presentation.
 
 import argparse
 import asyncio
+import logging
 import sys
 
 from tag_tracer.commands.scan import scan
@@ -23,6 +24,10 @@ from tag_tracer.commands.version import version
 
 
 def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)s] %(message)s",
+    )
     parser = argparse.ArgumentParser(
         prog="tag-tracer",
         description=(
