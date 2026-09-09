@@ -12,7 +12,7 @@ authors = [
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "playwright>=1.45.0",
     "pandas>=2.2.2",
@@ -23,6 +23,14 @@ dependencies = [
     "jinja2>=3.1.4"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-mock>=3.12",
+    "ruff>=0.4",
+]
+
 [project.scripts]
 tag-tracer = "tag_tracer.cli:main"
 
@@ -31,3 +39,15 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "tag_tracer.reporting" = ["templates/*.html"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = [".venv", "output", "reports"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"

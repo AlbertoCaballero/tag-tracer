@@ -9,10 +9,13 @@ TODO:
 """
 
 import asyncio
+import logging
 
 from playwright.async_api import Page, Request, async_playwright
 
 from tag_tracer.models import NetworkRequest
+
+logger = logging.getLogger(__name__)
 
 
 class BrowserManager:
@@ -51,7 +54,7 @@ class BrowserManager:
                 "--disable-blink-features=AutomationControlled",
                 "--disable-http2",
                 "--no-sandbox",
-            ]
+            ],
         )
         self.context = await self.browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -59,8 +62,10 @@ class BrowserManager:
             locale="en-US",
             timezone_id="America/New_York",
         )
-        await self.context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        self.page = await self.browser.new_page()
+        await self.context.add_init_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+        )
+        self.page = await self.context.new_page()
         self.page.on("request", self._handle_request)
         return self.page
 
@@ -75,16 +80,16 @@ class BrowserManager:
         """
         if not self.page:
             raise ConnectionError("Browser not launched. Call launch() first.")
-        print(f"\n[Browser] Navigating to: {url}")
+        logger.info("Navigating to: %s", url)
         await self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
         try:
             await self.page.wait_for_load_state("load", timeout=15000)
         except Exception:
             pass  # Page keeps loading past the load event; continue to settle
         if settle_time > 0:
-            print(f"[Browser] Waiting {settle_time}s for tags to fire...")
+            logger.info("Waiting %ss for tags to fire...", settle_time)
             await asyncio.sleep(settle_time)
-        print("\n[Browser] Navigation complete.")
+        logger.info("Navigation complete.")
 
     def get_captured_requests(self) -> list[NetworkRequest]:
         return self.captured_requests

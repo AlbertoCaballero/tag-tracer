@@ -1,23 +1,28 @@
 import json
+import logging
 import os
 from datetime import datetime
 
 from tag_tracer.validation.validation import ValidationSummary
 
+logger = logging.getLogger(__name__)
 
-def generate_json_report(summary: ValidationSummary, output_dir: str, filename: str = None):
+
+def generate_json_report(
+    summary: ValidationSummary, output_dir: str, filename: str = None
+):
     """
     Generates a JSON report from the validation summary.
     """
     os.makedirs(output_dir, exist_ok=True)
-    
+
     if not filename:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"validation_report_{timestamp}.json"
-    
+
     file_path = os.path.join(output_dir, filename)
-    
+
     with open(file_path, "w") as f:
-        json.dump(summary.dict(), f, indent=4)
-        
-    print(f"[Reporting] JSON report generated at: {file_path}")
+        json.dump(summary.model_dump(), f, indent=4)
+
+    logger.info("JSON report generated at: %s", file_path)

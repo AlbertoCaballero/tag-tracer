@@ -1,5 +1,4 @@
-import ast
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel
@@ -7,35 +6,23 @@ from pydantic import BaseModel
 from tag_tracer.utils.utils import string_to_list
 
 
-def _parse_string_list(value: str) -> List[str]:
-    """
-    Parses a string that represents a list, e.g., "[item1, item2]".
-    """
-    if isinstance(value, str) and value.startswith("[") and value.endswith("]"):
-        # Remove brackets and split by comma
-        items = value[1:-1].split(",")
-        # Strip whitespace from each item and filter out empty strings
-        return [item.strip() for item in items if item.strip()]
-    return [value]
-
-
 class VendorConfig(BaseModel):
-    domains: List[str] = []
-    query_fields: List[str] = []
-    body_fields: List[str] = []
-    header_fields: List[str] = []
+    domains: list[str] = []
+    query_fields: list[str] = []
+    body_fields: list[str] = []
+    header_fields: list[str] = []
 
 
 class PageConfig(BaseModel):
     id: str
     target_url: str
-    page_vendors: List[str] = []
-    expected_tags: Dict[str, Any] = {}
+    page_vendors: list[str] = []
+    expected_tags: dict[str, Any] = {}
 
 
 class ExcelConfig(BaseModel):
-    vendors: Dict[str, VendorConfig] = {}
-    pages: List[PageConfig] = []
+    vendors: dict[str, VendorConfig] = {}
+    pages: list[PageConfig] = []
 
 
 class ExcelLoader:
@@ -43,8 +30,8 @@ class ExcelLoader:
         self.path = path
         try:
             self.workbook = pd.ExcelFile(path)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Configuration file not found at: {path}")
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Configuration file not found at: {path}") from e
 
     def load(self) -> ExcelConfig:
         config = ExcelConfig()
@@ -59,7 +46,6 @@ class ExcelLoader:
                         page_vendors=string_to_list(row["vendors"]),
                     )
                     for col in data_frame.columns:
-                        # what is this for?
                         if col not in ["id", "target-url", "vendors"]:
                             if pd.notna(row[col]):
                                 page.expected_tags[col] = row[col]
@@ -84,11 +70,11 @@ class ExcelLoader:
                     if key == "domain":
                         vendor_config.domains.append(value)
                     elif key == "query-fields":
-                        vendor_config.query_fields.extend(_parse_string_list(value))
+                        vendor_config.query_fields.extend(string_to_list(value))
                     elif key == "body-field" or key == "body-fields":
-                        vendor_config.body_fields.extend(_parse_string_list(value))
+                        vendor_config.body_fields.extend(string_to_list(value))
                     elif key == "header-fields":
-                        vendor_config.header_fields.extend(_parse_string_list(value))
+                        vendor_config.header_fields.extend(string_to_list(value))
 
                 config.vendors[vendor_name] = vendor_config
 

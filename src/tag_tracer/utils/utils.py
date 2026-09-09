@@ -1,8 +1,7 @@
-from typing import List
 from urllib.parse import urlparse
 
 
-def string_to_list(s) -> List[str]:
+def string_to_list(s) -> list[str]:
     """
     Parses a string that represents a list, e.g., "[item1, item2]".
     """

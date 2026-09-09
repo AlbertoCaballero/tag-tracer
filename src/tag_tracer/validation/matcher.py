@@ -1,5 +1,5 @@
 import re
-from typing import Any, Union
+from typing import Any
 
 from tag_tracer.validation.rules import ValidationRule
 
@@ -12,7 +12,7 @@ class Matcher:
     def match(self, rule: ValidationRule, target_value: Any) -> bool:
         if rule.type == "present":
             return target_value is not None
-        
+
         if target_value is None:
             return False
 
@@ -32,4 +32,3 @@ class Matcher:
             return expected_str in target_str
         else:
             raise ValueError(f"Unknown validation rule type: {rule.type}")
-

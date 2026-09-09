@@ -6,7 +6,7 @@ without the interactive search and filter features.
 """
 
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from rich import box
 from rich.console import Console
@@ -30,7 +30,9 @@ def _found(status: str) -> str:
 
 def _location(location: str) -> str:
     styles = {"query": "cyan", "body": "magenta", "header": "yellow", "N/A": "dim"}
-    return f"[{styles.get(location, 'white')}]{location}[/{styles.get(location, 'white')}]"
+    return (
+        f"[{styles.get(location, 'white')}]{location}[/{styles.get(location, 'white')}]"
+    )
 
 
 def _display_value(value: Any) -> str:
@@ -41,7 +43,7 @@ def _display_value(value: Any) -> str:
     return str(value)
 
 
-def _param_table(title: str, params: Dict[str, Any]) -> Table:
+def _param_table(title: str, params: dict[str, Any]) -> Table:
     table = Table(title=title, box=box.SIMPLE, expand=False)
     table.add_column("Key", style="bold", overflow="fold")
     table.add_column("Value", overflow="fold")

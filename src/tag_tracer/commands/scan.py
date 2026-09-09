@@ -1,6 +1,7 @@
 import sys
+
 from tag_tracer.browser.browser import BrowserManager
-from tag_tracer.config.loader import ExcelLoader
+from tag_tracer.config.loader import ExcelConfig, ExcelLoader
 from tag_tracer.network_capture.network_capture import NetworkCapture
 from tag_tracer.reporting.console_report import (
     print_captured_requests,
@@ -12,6 +13,17 @@ from tag_tracer.reporting.console_report import (
 from tag_tracer.reporting.reporting import Reporting
 from tag_tracer.validation.matcher import Matcher
 from tag_tracer.validation.validation import Validator
+
+
+def _resolve_scan_urls(url_arg: str, config: ExcelConfig) -> list[str]:
+    """Resolves the --url argument into concrete URLs to scan.
+
+    Passing 'all' (the default) scans every configured page's target URL;
+    any other value is treated as a single URL.
+    """
+    if url_arg == "all":
+        return [page.target_url for page in config.pages]
+    return [url_arg]
 
 
 async def scan(args):
@@ -32,7 +44,8 @@ async def scan(args):
     exit_code = 0
     try:
         await browser_manager.launch()
-        await browser_manager.navigate(args.url, settle_time=args.wait)
+        for url in _resolve_scan_urls(args.url, config_data):
+            await browser_manager.navigate(url, settle_time=args.wait)
 
         requests = browser_manager.get_captured_requests()
         print_captured_requests(requests)
@@ -63,6 +76,9 @@ async def scan(args):
             report_formats = [f.strip() for f in args.report_formats.split(",")]
             reporting.generate_reports(validation_summary, report_formats)
 
+    except Exception as e:
+        print(f"[TagTracer] Error during scan: {e}", file=sys.stderr)
+        exit_code = 1
     finally:
         await browser_manager.close()
         print("\n[TagTracer] Scan complete.")

@@ -74,8 +74,18 @@ def test_cli_exit_code_failed(tmp_path, monkeypatch):
     monkeypatch.setattr(
         sys,
         "argv",
-        ["tag-tracer", "validate", "--input", capture, "--config", CONFIG,
-         "--output", str(tmp_path / "out"), "--report-formats", "none"],
+        [
+            "tag-tracer",
+            "validate",
+            "--input",
+            capture,
+            "--config",
+            CONFIG,
+            "--output",
+            str(tmp_path / "out"),
+            "--report-formats",
+            "none",
+        ],
     )
     with pytest.raises(SystemExit) as exc_info:
         main()
@@ -87,8 +97,18 @@ def test_cli_exit_code_passed(tmp_path, monkeypatch):
     monkeypatch.setattr(
         sys,
         "argv",
-        ["tag-tracer", "validate", "--input", capture, "--config", CONFIG,
-         "--output", str(tmp_path / "out"), "--report-formats", "none"],
+        [
+            "tag-tracer",
+            "validate",
+            "--input",
+            capture,
+            "--config",
+            CONFIG,
+            "--output",
+            str(tmp_path / "out"),
+            "--report-formats",
+            "none",
+        ],
     )
     with pytest.raises(SystemExit) as exc_info:
         main()

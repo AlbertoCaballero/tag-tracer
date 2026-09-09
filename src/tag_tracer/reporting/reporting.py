@@ -3,8 +3,6 @@ Responsible for aggregating validation results, generating reports,
 and exporting findings to various formats (e.g., JSON, HTML, Excel).
 """
 
-from typing import List
-
 from tag_tracer.reporting.excel_report import generate_excel_report
 from tag_tracer.reporting.html_report import generate_html_report
 from tag_tracer.reporting.json_report import generate_json_report
@@ -15,7 +13,7 @@ class Reporting:
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
 
-    def generate_reports(self, summary: ValidationSummary, formats: List[str]):
+    def generate_reports(self, summary: ValidationSummary, formats: list[str]):
         if "json" in formats:
             generate_json_report(summary, self.output_dir)
         if "html" in formats:

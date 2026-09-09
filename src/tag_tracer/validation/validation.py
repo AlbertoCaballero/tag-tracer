@@ -3,16 +3,19 @@ Validation module for TagTracer.
 """
 
 import json
-from typing import Any, Dict, List, Optional
+import logging
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from pydantic import BaseModel
 
-from tag_tracer.config.loader import ExcelConfig, PageConfig
+from tag_tracer.config.loader import ExcelConfig
 from tag_tracer.models import NetworkRequest
 from tag_tracer.utils.utils import url_matches_domain
 from tag_tracer.validation.matcher import Matcher
-from tag_tracer.validation.rules import ExpectedTag, ValidationRule
+from tag_tracer.validation.rules import ExpectedTag
+
+logger = logging.getLogger(__name__)
 
 
 class TagValidationResult(BaseModel):
@@ -31,11 +34,11 @@ class RequestValidationResult(BaseModel):
     request_url: str
     method: str = ""
     vendor_name: str
-    matched_domains: List[str]
-    query_params: Dict[str, Any] = {}
-    body_params: Dict[str, Any] = {}
-    header_params: Dict[str, Any] = {}
-    tags_validated: List[TagValidationResult]
+    matched_domains: list[str]
+    query_params: dict[str, Any] = {}
+    body_params: dict[str, Any] = {}
+    header_params: dict[str, Any] = {}
+    tags_validated: list[TagValidationResult]
     overall_status: str
 
 
@@ -44,10 +47,10 @@ class PageValidationResult(BaseModel):
     page_url: str
     expected_tags_count: int
     matched_requests_count: int
-    expected_tags: Dict[str, Any] = {}
-    found_tags: Dict[str, Any] = {}
-    expected_tag_status: List[Dict[str, Any]] = []
-    request_results: List[RequestValidationResult]
+    expected_tags: dict[str, Any] = {}
+    found_tags: dict[str, Any] = {}
+    expected_tag_status: list[dict[str, Any]] = []
+    request_results: list[RequestValidationResult]
     overall_status: str
 
 
@@ -55,7 +58,7 @@ class ValidationSummary(BaseModel):
     total_pages_scanned: int
     pages_passed: int
     pages_failed: int
-    page_results: List[PageValidationResult]
+    page_results: list[PageValidationResult]
 
 
 class Validator:
@@ -63,14 +66,14 @@ class Validator:
         self.config = config
         self.matcher = matcher
 
-    def validate(self, captured_requests: List[NetworkRequest]) -> ValidationSummary:
-        print("\n[Validator] Starting validation...")
-        page_results: List[PageValidationResult] = []
+    def validate(self, captured_requests: list[NetworkRequest]) -> ValidationSummary:
+        logger.info("Starting validation...")
+        page_results: list[PageValidationResult] = []
         total_pages_scanned = len(self.config.pages)
         pages_passed = 0
 
         for page in self.config.pages:
-            page_matched_requests: List[RequestValidationResult] = []
+            page_matched_requests: list[RequestValidationResult] = []
             page_overall_status = "failed"  # Assume failed until all pass
             matched_requests_count = 0
 
@@ -82,7 +85,7 @@ class Validator:
             for req in relevant_requests:
                 req_url = req.url
                 vendor_name = ""  # Determine vendor name
-                matched_domains: List[str] = []
+                matched_domains: list[str] = []
 
                 # Determine which vendor this request belongs to
                 for v_name, v_config in self.config.vendors.items():
@@ -92,7 +95,9 @@ class Validator:
                     ):
                         vendor_name = v_name
                         matched_domains = [
-                            d for d in v_config.domains if url_matches_domain(req_url, d)
+                            d
+                            for d in v_config.domains
+                            if url_matches_domain(req_url, d)
                         ]
                         break
 
@@ -101,7 +106,7 @@ class Validator:
                     continue
 
                 matched_requests_count += 1
-                tags_validated: List[TagValidationResult] = []
+                tags_validated: list[TagValidationResult] = []
                 request_overall_status = "passed"
 
                 # Extract parameters from request
@@ -132,9 +137,15 @@ class Validator:
                     expected_tag = ExpectedTag(key=param_name, **tag_data)
 
                     # Resolve where the field should live from the owning vendor's config
-                    field_locations = self._field_locations(owning_vendor or vendor_name)
+                    field_locations = self._field_locations(
+                        owning_vendor or vendor_name
+                    )
                     actual_value, source = self._lookup_value(
-                        param_name, field_locations, query_params, body_params, header_params
+                        param_name,
+                        field_locations,
+                        query_params,
+                        body_params,
+                        header_params,
                     )
                     location = source or field_locations.get(param_name) or "N/A"
 
@@ -142,9 +153,11 @@ class Validator:
                     tag_message = "No matching rule passed"
 
                     rule_passed = False
-                    for rule_name, rule in expected_tag.rules.items():
-                        is_match = self.matcher.match(rule, actual_value)
+                    matched_rule = None
+                    for rule_name, candidate_rule in expected_tag.rules.items():
+                        is_match = self.matcher.match(candidate_rule, actual_value)
                         if is_match:
+                            matched_rule = candidate_rule
                             rule_passed = True
                             tag_status = "passed"
                             tag_message = f"Matched by rule '{rule_name}'"
@@ -158,10 +171,14 @@ class Validator:
                             key=expected_tag_key,
                             field=param_name,
                             location=location,
-                            expected_value=rule.value if rule_passed and rule.value is not None else expected_tag.value,
+                            expected_value=matched_rule.value
+                            if rule_passed and matched_rule.value is not None
+                            else expected_tag.value,
                             actual_value=actual_value,
-                            rule_type=rule.type if rule_passed else "N/A",
-                            case_sensitive=rule.case_sensitive if rule_passed else True,
+                            rule_type=matched_rule.type if rule_passed else "N/A",
+                            case_sensitive=matched_rule.case_sensitive
+                            if rule_passed
+                            else True,
                             status=tag_status,
                             message=tag_message,
                         )
@@ -196,7 +213,7 @@ class Validator:
                 pages_passed += 1
 
             # Aggregate every parameter actually found across the page's requests
-            found_tags: Dict[str, Any] = {}
+            found_tags: dict[str, Any] = {}
             for req_res in page_matched_requests:
                 found_tags.update(req_res.query_params)
                 found_tags.update(req_res.body_params)
@@ -204,8 +221,8 @@ class Validator:
             # Resolve each expected tag to its field/location and mark found/missing.
             # Derive from the per-request validation results (vendor-scoped and
             # correct) instead of re-aggregating raw params across all vendors.
-            expected_tag_status: List[Dict[str, Any]] = []
-            tag_results: Dict[str, List[TagValidationResult]] = {}
+            expected_tag_status: list[dict[str, Any]] = []
+            tag_results: dict[str, list[TagValidationResult]] = {}
             for req_res in page_matched_requests:
                 for tag_res in req_res.tags_validated:
                     tag_results.setdefault(tag_res.key, []).append(tag_res)
@@ -260,13 +277,17 @@ class Validator:
             pages_failed=total_pages_scanned - pages_passed,
             page_results=page_results,
         )
-        print(
-            f"\n[Validator] Validation complete. Pages passed: {pages_passed}/{total_pages_scanned}"
+        logger.info(
+            "Validation complete. Pages passed: %s/%s",
+            pages_passed,
+            total_pages_scanned,
         )
         return summary
 
     @staticmethod
-    def _flatten_json(obj: Dict[str, Any], prefix: str = "", result: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def _flatten_json(
+        obj: dict[str, Any], prefix: str = "", result: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Flattens a nested JSON object into dotted paths, e.g.
         {'data': {'field': 'x'}} -> {'data.field': 'x'}.
@@ -284,7 +305,7 @@ class Validator:
         return result
 
     @staticmethod
-    def _parse_body_params(post_data: Optional[str]) -> Dict[str, Any]:
+    def _parse_body_params(post_data: str | None) -> dict[str, Any]:
         """
         Parses a request body into a flat dict of parameters.
         Supports form-encoded and JSON bodies; nested JSON objects are
@@ -307,11 +328,11 @@ class Validator:
             return {}
 
     @staticmethod
-    def _normalize_headers(headers: Dict[str, Any]) -> Dict[str, Any]:
+    def _normalize_headers(headers: dict[str, Any]) -> dict[str, Any]:
         """Normalizes header keys to lowercase (HTTP headers are case-insensitive)."""
         return {str(k).lower(): v for k, v in headers.items()}
 
-    def _field_locations(self, vendor_name: Optional[str]) -> Dict[str, str]:
+    def _field_locations(self, vendor_name: str | None) -> dict[str, str]:
         """
         Builds a map of field name -> parameter location ('query' | 'body' | 'header')
         from a vendor's declared query/body/header fields.
@@ -319,7 +340,7 @@ class Validator:
         config = self.config.vendors.get(vendor_name or "")
         if not config:
             return {}
-        locations: Dict[str, str] = {}
+        locations: dict[str, str] = {}
         for field in config.query_fields:
             locations[field] = "query"
         for field in config.body_fields:
@@ -331,10 +352,10 @@ class Validator:
     @staticmethod
     def _lookup_value(
         field: str,
-        field_locations: Dict[str, str],
-        query_params: Dict[str, Any],
-        body_params: Dict[str, Any],
-        header_params: Dict[str, Any],
+        field_locations: dict[str, str],
+        query_params: dict[str, Any],
+        body_params: dict[str, Any],
+        header_params: dict[str, Any],
     ) -> tuple:
         """
         Returns (value, location) for a field. The declared location from the
@@ -367,7 +388,7 @@ class Validator:
         return None, None
 
     @staticmethod
-    def _resolve_tag_key(key: str, page_vendors: List[str]):
+    def _resolve_tag_key(key: str, page_vendors: list[str]):
         """
         Resolves an expected tag key into (owning_vendor, parameter_name).
 
@@ -378,12 +399,12 @@ class Validator:
         for vendor in page_vendors:
             prefix = f"{vendor}-"
             if key.startswith(prefix):
-                return vendor, key[len(prefix):]
+                return vendor, key[len(prefix) :]
         return None, key
 
     def _get_relevant_requests(
-        self, captured_requests: List[NetworkRequest], page_vendors: List[str]
-    ) -> List[NetworkRequest]:
+        self, captured_requests: list[NetworkRequest], page_vendors: list[str]
+    ) -> list[NetworkRequest]:
         """
         Filters captured requests to only include those from vendors specified for the current page.
         """
